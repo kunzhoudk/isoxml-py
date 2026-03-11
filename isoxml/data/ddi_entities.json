@@ -2431,13 +2431,13 @@
     },
     "406": {
         "DDI": 406,
-        "name": "Actual Protein Content",
+        "name": "Actual Crude Protein Content",
         "unit": "ppm",
         "bitResolution": 1.0
     },
     "407": {
         "DDI": 407,
-        "name": "Average Protein Content",
+        "name": "Average Crude Protein Content",
         "unit": "ppm",
         "bitResolution": 1.0
     },
@@ -3019,43 +3019,43 @@
     },
     "505": {
         "DDI": 505,
-        "name": "Tramline Control Level",
+        "name": "Supported Track Control Levels",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "506": {
         "DDI": 506,
-        "name": "Setpoint Tramline Control Level",
+        "name": "Setpoint Track Control Level",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "507": {
         "DDI": 507,
-        "name": "Tramline Sequence Number",
+        "name": "Guidance Track Sequence Number",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "508": {
         "DDI": 508,
-        "name": "Unique A-B Guidance Reference Line ID",
+        "name": "Unique Guidance Reference Line ID",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "509": {
         "DDI": 509,
-        "name": "Actual Track Number",
+        "name": "Actual Guidance Track Number",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "510": {
         "DDI": 510,
-        "name": "Track Number to the right",
+        "name": "Guidance Track Number to the right",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "511": {
         "DDI": 511,
-        "name": "Track Number to the left",
+        "name": "Guidance Track Number to the left",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
@@ -3079,7 +3079,7 @@
     },
     "515": {
         "DDI": 515,
-        "name": "Tramline Control State",
+        "name": "Track Control State",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
@@ -3997,43 +3997,43 @@
     },
     "669": {
         "DDI": 669,
-        "name": "Bout Track Number Shift",
+        "name": "Track Number Shift",
         "unit": "n.a.",
         "bitResolution": 1.0
     },
     "670": {
         "DDI": 670,
-        "name": "Tramline Primary Working Width",
+        "name": "Primary Working Width",
         "unit": "mm",
         "bitResolution": 1.0
     },
     "671": {
         "DDI": 671,
-        "name": "Tramline Primary Tire Width",
+        "name": "Primary Tire Width",
         "unit": "mm",
         "bitResolution": 1.0
     },
     "672": {
         "DDI": 672,
-        "name": "Tramline Primary Wheel Distance",
+        "name": "Primary Wheel Distance",
         "unit": "mm",
         "bitResolution": 1.0
     },
     "673": {
         "DDI": 673,
-        "name": "Tramline Secondary Working Width",
+        "name": "Secondary Working Width",
         "unit": "mm",
         "bitResolution": 1.0
     },
     "674": {
         "DDI": 674,
-        "name": "Tramline Secondary Tire Width",
+        "name": "Secondary Tire Width",
         "unit": "mm",
         "bitResolution": 1.0
     },
     "675": {
         "DDI": 675,
-        "name": "Tramline Secondary Wheel Distance",
+        "name": "Secondary Wheel Distance",
         "unit": "mm",
         "bitResolution": 1.0
     },
@@ -4151,6 +4151,216 @@
         "unit": "s",
         "bitResolution": 1.0
     },
+    "695": {
+        "DDI": 695,
+        "name": "Mesh Total Used",
+        "unit": "mm",
+        "bitResolution": 1.0
+    },
+    "696": {
+        "DDI": 696,
+        "name": "Film Total Used",
+        "unit": "mm",
+        "bitResolution": 1.0
+    },
+    "697": {
+        "DDI": 697,
+        "name": "Twine Total Used",
+        "unit": "mm",
+        "bitResolution": 1.0
+    },
+    "698": {
+        "DDI": 698,
+        "name": "Average Mass Per Bale",
+        "unit": "kg",
+        "bitResolution": 1.0
+    },
+    "699": {
+        "DDI": 699,
+        "name": "Average Mass Per Load",
+        "unit": "kg",
+        "bitResolution": 1.0
+    },
+    "700": {
+        "DDI": 700,
+        "name": "Nutrient Analysis Method",
+        "unit": "n.a.",
+        "bitResolution": 1.0
+    },
+    "701": {
+        "DDI": 701,
+        "name": "Actual Starch Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "702": {
+        "DDI": 702,
+        "name": "Average Starch Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "703": {
+        "DDI": 703,
+        "name": "Actual Ash Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "704": {
+        "DDI": 704,
+        "name": "Average Ash Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "705": {
+        "DDI": 705,
+        "name": "Actual Sugar Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "706": {
+        "DDI": 706,
+        "name": "Average Sugar Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "707": {
+        "DDI": 707,
+        "name": "Actual Lipids Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "708": {
+        "DDI": 708,
+        "name": "Average Lipids Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "709": {
+        "DDI": 709,
+        "name": "Actual Crude Fat Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "710": {
+        "DDI": 710,
+        "name": "Average Crude Fat Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "711": {
+        "DDI": 711,
+        "name": "Actual Crude Fiber Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "712": {
+        "DDI": 712,
+        "name": "Average Crude Fiber Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "713": {
+        "DDI": 713,
+        "name": "Actual Nitrogen (TKN) Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "714": {
+        "DDI": 714,
+        "name": "Average Nitrogen (TKN) Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "715": {
+        "DDI": 715,
+        "name": "Actual Phosphates Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "716": {
+        "DDI": 716,
+        "name": "Average Phosphates Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "717": {
+        "DDI": 717,
+        "name": "Actual Potassium Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "718": {
+        "DDI": 718,
+        "name": "Average Potassium Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "719": {
+        "DDI": 719,
+        "name": "Actual ADL Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "720": {
+        "DDI": 720,
+        "name": "Average ADL Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "721": {
+        "DDI": 721,
+        "name": "Actual ADF Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "722": {
+        "DDI": 722,
+        "name": "Average ADF Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "723": {
+        "DDI": 723,
+        "name": "Actual NDF Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "724": {
+        "DDI": 724,
+        "name": "Average NDF Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "725": {
+        "DDI": 725,
+        "name": "Actual uNDFom240 Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "726": {
+        "DDI": 726,
+        "name": "Average uNDFom240 Content",
+        "unit": "ppm",
+        "bitResolution": 1.0
+    },
+    "727": {
+        "DDI": 727,
+        "name": "Actual Biomethanation Production Potential",
+        "unit": "mm³/kg",
+        "bitResolution": 1e-06
+    },
+    "728": {
+        "DDI": 728,
+        "name": "Average Biomethanation Production Potential",
+        "unit": "mm³/kg",
+        "bitResolution": 1e-06
+    },
+    "729": {
+        "DDI": 729,
+        "name": "Average Corn Silage Processing Score",
+        "unit": "%",
+        "bitResolution": 0.001
+    },
     "32768": {
         "DDI": 32768,
         "name": "Maximum Droplet Size",
@@ -4187,6 +4397,12 @@
         "unit": "%",
         "bitResolution": 0.01
     },
+    "32774": {
+        "DDI": 32774,
+        "name": "Maximum Corn Silage Processing Score",
+        "unit": "%",
+        "bitResolution": 0.001
+    },
     "36864": {
         "DDI": 36864,
         "name": "Minimum Droplet Size",
@@ -4222,6 +4438,12 @@
         "name": "Minimum Crop Conditioning Intensity",
         "unit": "%",
         "bitResolution": 0.01
+    },
+    "36870": {
+        "DDI": 36870,
+        "name": "Minimum Corn Silage Processing Score",
+        "unit": "%",
+        "bitResolution": 0.001
     },
     "40960": {
         "DDI": 40960,
@@ -4295,6 +4517,12 @@
         "unit": "%",
         "bitResolution": 0.01
     },
+    "45062": {
+        "DDI": 45062,
+        "name": "Actual Corn Silage Processing Score",
+        "unit": "%",
+        "bitResolution": 0.001
+    },
     "49152": {
         "DDI": 49152,
         "name": "Setpoint Droplet Size",
@@ -4330,6 +4558,12 @@
         "name": "Setpoint Crop Conditioning Intensity",
         "unit": "%",
         "bitResolution": 0.01
+    },
+    "49158": {
+        "DDI": 49158,
+        "name": "Setpoint Corn Silage Processing Score",
+        "unit": "%",
+        "bitResolution": 0.001
     },
     "57342": {
         "DDI": 57342,

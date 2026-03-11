@@ -8,6 +8,7 @@ This grid type is particularly suitable for applications with many different val
 successful import/display on Deutz-Fahr 6140.4 + Bogballe L20W
 successful import/display on New Holland T7 + IntelliView 12 + Kverneland iXter B18 (TC did not accept set-point)
 """
+
 from decimal import Decimal
 
 import numpy as np
@@ -22,52 +23,48 @@ from isoxml.models.ddi_entities import DDEntity
 from isoxml.util.isoxml_io import isoxml_to_zip
 
 base_dir = Path(__file__).parent
-output_path = base_dir / 'output' / 'example_grid_2.zip'
+output_path = base_dir / "output" / "example_grid_2.zip"
 
 shp_converter = ShapelyConverterV3()
 aoi = shp.from_wkt(
-    "POLYGON ((15.1461618 48.1269217, 15.1461618 48.1267442, 15.1463363 48.1267442, 15.1463363 48.1269217, 15.1461618 48.1269217))")
+    "POLYGON ((15.1461618 48.1269217, 15.1461618 48.1267442, 15.1463363 48.1267442, 15.1463363 48.1269217, 15.1461618 48.1269217))"
+)
 iso_aoi = shp_converter.to_iso_polygon(aoi, iso.PolygonType.PartfieldBoundary)
 
 customer = iso.Customer(id="CTR100", designator="jr_customer")
 farm = iso.Farm(id="FRM100", designator="jr_farm", customer_id_ref=customer.id)
 partfield = iso.Partfield(
-    id="PFD100", designator="test_field", area=123456,
-    customer_id_ref=customer.id, farm_id_ref=farm.id,
-    polygons=[iso_aoi]
+    id="PFD100",
+    designator="test_field",
+    area=123456,
+    customer_id_ref=customer.id,
+    farm_id_ref=farm.id,
+    polygons=[iso_aoi],
 )
 
 # keep in mind: ISOXML Grid coordinate system is bottom-up.
 # therefore this image will appear upside down on your viewer/terminal
-grid_data = np.array([
-    [0, 1111],
-    [2222, 3333]
-])
+grid_data = np.array([[0, 1111], [2222, 3333]])
 y, x = grid_data.shape
 
 dd_entity = DDEntity.from_id(6)
 
-pdv_0 = iso.ProcessDataVariable(
-    process_data_ddi=bytes(dd_entity),
-    process_data_value=0
-)
+pdv_0 = iso.ProcessDataVariable(process_data_ddi=bytes(dd_entity), process_data_value=0)
 
 treatment_0 = iso.TreatmentZone(
-    code=0,
-    designator="zone_0",
-    process_data_variables=[pdv_0]
+    code=0, designator="zone_0", process_data_variables=[pdv_0]
 )
 
 grid = iso.Grid(
-    minimum_north_position=Decimal('48.12674'),
-    minimum_east_position=Decimal('15.14615'),
+    minimum_north_position=Decimal("48.12674"),
+    minimum_east_position=Decimal("15.14615"),
     cell_north_size=0.0001,
     cell_east_size=0.0001,
     maximum_column=x,
     maximum_row=y,
     filename="GRD00000",
     type=iso.GridType.GridType2,
-    treatment_zone_code=treatment_0.code
+    treatment_zone_code=treatment_0.code,
 )
 grid_bin = from_numpy_array_to_type_2(grid_data, grid, ddi_list=[dd_entity])
 
@@ -82,7 +79,7 @@ task = iso.Task(
     partfield_id_ref=partfield.id,
     default_treatment_zone_code=treatment_0.code,
     position_lost_treatment_zone_code=treatment_0.code,
-    out_of_field_treatment_zone_code=treatment_0.code
+    out_of_field_treatment_zone_code=treatment_0.code,
 )
 
 task_data = iso.Iso11783TaskData(
@@ -92,8 +89,8 @@ task_data = iso.Iso11783TaskData(
     tasks=[task],
     customers=[customer],
     farms=[farm],
-    partfields=[partfield]
+    partfields=[partfield],
 )
 
-with open(output_path, 'wb') as zip_file:
+with open(output_path, "wb") as zip_file:
     isoxml_to_zip(zip_file, task_data, {grid.filename: grid_bin})
