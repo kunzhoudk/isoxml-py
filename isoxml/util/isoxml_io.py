@@ -1,3 +1,5 @@
+"""Helpers for reading and writing ISOXML task data from disk, zip, and text."""
+
 import os.path
 import tempfile
 from pathlib import Path
@@ -14,6 +16,7 @@ import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.util.external_file import merge_ext_content
 
+# Shared parser/serializer instances used by all IO helpers in this module.
 __parser = XmlParser(ParserConfig(
     fail_on_unknown_properties=False,
     fail_on_unknown_attributes=False
@@ -28,6 +31,7 @@ __serializer = XmlSerializer(
 
 
 def __select_base_module(xml_content: str) -> ModuleType:
+    """Select the ISOXML model module (`v3` or `v4`) from the XML header."""
     xml_head = xml_content[:1024]
     if 'VersionMajor="4"' in xml_head:
         return iso4
@@ -45,6 +49,20 @@ def isoxml_from_path(
     iso3.Iso11783TaskData | iso4.Iso11783TaskData,
     dict[str, bytes | iso3.ExternalFileContents | iso4.ExternalFileContents]
 ]:
+    """Load `TASKDATA.XML` plus optional external references from a directory.
+
+    Args:
+        task_data_path: Path to a folder containing `TASKDATA.XML`, or the XML file itself.
+        external_files:
+            - `merge`: parse external XML files and merge them into the task-data tree.
+            - `separate`: parse external XML files and return them separately.
+            - `ignore`: do not parse external XML files.
+        read_bin_files: If true, read supported `.bin` files (`GRD*`, `TLG*`, `PNT*`).
+
+    Returns:
+        `(task_data, references)` where `references` contains binary payloads and/or
+        parsed external XML objects depending on `external_files`.
+    """
     if task_data_path.is_file():
         task_data_path = task_data_path.parent
 
@@ -56,6 +74,7 @@ def isoxml_from_path(
     ext_file_obj_dict = {}
     file_in_dir = os.listdir(task_data_path)
     if external_files in ('merge', 'separate'):
+        # Resolve each external-file reference to exactly one matching XML file.
         for ext_ref in task_data.external_file_references:
             assert ext_ref.filetype == iso.ExternalFileReferenceType.XML
             fitting_files = [file_name for file_name in file_in_dir if file_name.startswith(ext_ref.filename)]
@@ -70,6 +89,7 @@ def isoxml_from_path(
 
     bin_dict = {}
     if read_bin_files:
+        # Keep binary blobs keyed by ISOXML object id (filename without extension).
         for file_name in file_in_dir:
             if file_name.lower().endswith('.bin') and file_name.startswith(('GRD', 'TLG', 'PNT')):
                 iso_id_ref = file_name.rsplit('.')[0]
@@ -87,6 +107,7 @@ def isoxml_from_zip(
     iso3.Iso11783TaskData | iso4.Iso11783TaskData,
     dict[str, bytes | iso3.ExternalFileContents | iso4.ExternalFileContents]
 ]:
+    """Load ISOXML task data from a zip archive by extracting it to a temp folder."""
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
         with ZipFile(zip_path, 'r') as zip_archive:
@@ -95,6 +116,7 @@ def isoxml_from_zip(
 
 
 def isoxml_from_text(xml_content: str) -> iso3.Iso11783TaskData | iso4.Iso11783TaskData:
+    """Parse task data XML text into the matching v3/v4 dataclass model."""
     if 'VersionMajor="4"' in xml_content:
         iso = iso4
     elif 'VersionMajor="3"' in xml_content:
@@ -105,6 +127,7 @@ def isoxml_from_text(xml_content: str) -> iso3.Iso11783TaskData | iso4.Iso11783T
 
 
 def isoxml_to_text(task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData) -> str:
+    """Serialize task data dataclass objects to XML text."""
     return __serializer.render(task_data)
 
 
@@ -113,6 +136,12 @@ def isoxml_to_dir(
         task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData,
         ext_refs: dict[str, bytes | iso3.ExternalFileContents | iso4.ExternalFileContents] | None = None
 ) -> None:
+    """Write `TASKDATA.XML` and optional external references into a directory.
+
+    `ext_refs` values can be:
+    - `bytes` for binary payloads (`<ref>.bin`)
+    - `ExternalFileContents` for XML payloads (`<ref>.XML`)
+    """
     if not ext_refs:
         ext_refs = {}
     xml_path = dir_path / 'TASKDATA.XML'
@@ -137,6 +166,12 @@ def isoxml_to_zip(
         ext_refs: dict[str, bytes | iso3.ExternalFileContents | iso4.ExternalFileContents] | None = None,
         include_folder=True
 ) -> None:
+    """Write task data and references into a zip archive.
+
+    Args:
+        target: Zip file path or file-like object accepted by `ZipFile`.
+        include_folder: If true, write files under a `TASKDATA/` folder in the archive.
+    """
     if not ext_refs:
         ext_refs = {}
     path_in_arch = 'TASKDATA/' if include_folder else ''
