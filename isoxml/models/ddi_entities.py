@@ -6,6 +6,21 @@ to each type of process data (e.g., DDI 1 = "Setpoint Volume Per Area", DDI 6 = 
 Each DDI entry carries metadata such as name, unit, and bit resolution (scale factor).
 
 Full registry: https://www.isobus.net/isobus/dDEntity
+
+中文总体说明：
+- 本模块用于表示和查询 ISOBUS 的 DDI（Data Dictionary Item，数据字典项）。
+- DDI 是过程数据类型的唯一编号；同一个编号对应固定的名称、单位和分辨率（bitResolution）。
+- 模块在导入时会加载内置 `ddi_entities.json`，并提供按整数 ID 或按 2 字节编码进行反查。
+- `DDEntity` 是一个轻量数据对象，常用于在 ISOXML 解析/生成时完成 DDI 与元数据之间的转换。
+
+如何更新 `ddi_entities.json`：
+1. 进入更新脚本目录：`cd resources/ddi_update`
+2. 执行抓取脚本：`python ddi_entities_updater.py`
+3. 覆盖库内数据文件：`cp ddi_entities.json ../../isoxml/data/ddi_entities.json`
+
+说明：
+- 脚本会从 ISOBUS 官方导出地址抓取最新 DDI 定义。
+- 建议更新后运行相关测试（如 `test/models/ddi_entities_test.py`）再提交。
 """
 
 import json
