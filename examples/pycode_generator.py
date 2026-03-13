@@ -12,7 +12,7 @@ from xsdata.formats.dataclass.serializers import PycodeSerializer
 from isoxml.util.isoxml_io import isoxml_from_path
 
 base_dir = Path(__file__).parent
-path = base_dir.parent / "test" / "resources"
+path = base_dir.parent / "tests" / "resources"
 
 task_data = isoxml_from_path(path/ 'isoxml/v4/cnh_export/TASKDATA.XML')
 

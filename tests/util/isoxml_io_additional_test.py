@@ -7,7 +7,7 @@ import pytest
 
 import isoxml.models.base.v4 as iso4
 from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_text, isoxml_to_dir, isoxml_to_zip
-from test.resources.test_resources import TEST_RES_DIR
+from tests.resources.test_resources import TEST_RES_DIR
 
 
 def _task_data_minimal_v4() -> iso4.Iso11783TaskData:

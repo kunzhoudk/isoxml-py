@@ -46,11 +46,16 @@ test = [
 
 
 [tool.setuptools.packages.find]
-where = ["."]
+where = ["src"]
 include = ["isoxml*"]
 exclude = ["examples"]
 namespaces = false
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.package-data]
 "isoxml" = ["data/*"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]

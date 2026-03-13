@@ -16,11 +16,11 @@ Full registry: https://www.isobus.net/isobus/dDEntity
 如何更新 `ddi_entities.json`：
 1. 进入更新脚本目录：`cd resources/ddi_update`
 2. 执行抓取脚本：`python ddi_entities_updater.py`
-3. 覆盖库内数据文件：`cp ddi_entities.json ../../isoxml/data/ddi_entities.json`
+3. 覆盖库内数据文件：`cp ddi_entities.json ../../src/isoxml/data/ddi_entities.json`
 
 说明：
 - 脚本会从 ISOBUS 官方导出地址抓取最新 DDI 定义。
-- 建议更新后运行相关测试（如 `test/models/ddi_entities_test.py`）再提交。
+- 建议更新后运行相关测试（如 `tests/models/ddi_entities_test.py`）再提交。
 """
 
 import json
