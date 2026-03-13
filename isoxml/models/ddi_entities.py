@@ -75,7 +75,7 @@ class DDEntity:
         return DDEntity(
             ddi=ddi_dict["DDI"],
             name=ddi_dict["name"],
-            unit=getattr(ddi_dict, "unit", None),
+            unit=ddi_dict.get("unit"),
             bit_resolution=ddi_dict["bitResolution"],
         )
 
