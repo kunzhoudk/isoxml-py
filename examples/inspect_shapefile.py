@@ -28,6 +28,10 @@ def inspect_shapefile(shp_path: Path) -> None:
     print(f"Total features: {len(gdf)}")
     print(f"Geometry types: {gdf.geometry.geom_type.unique().tolist()}")
     print(f"CRS: {gdf.crs}")
+    # add how many polyons that multipolygon has
+    if "MultiPolygon" in gdf.geometry.geom_type.unique():
+        multipolygons = gdf[gdf.geometry.geom_type == "MultiPolygon"]
+        print(f"  - MultiPolygons has : {len(multipolygons)} polygons")
     print()
 
     # Field information
@@ -138,7 +142,7 @@ def inspect_shapefile(shp_path: Path) -> None:
 
 def main() -> None:
     # CHANGE THIS PATH to your shapefile
-    shp_path = Path(__file__).parent / "input" / "test_shp" / "20250415_211530.shp"
+    shp_path = Path(__file__).parent / "input" / "big" / "shp" / "NDVI_Rx.shp"
 
     if not shp_path.exists():
         print(f"❌ File not found: {shp_path}")

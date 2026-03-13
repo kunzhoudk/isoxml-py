@@ -7,18 +7,13 @@ This README explains what is inside `isoxml/models`:
 ## XSD code generation
 
 ```bash
-xsdata resources/xsd/ISO11783_TaskFile_V3-3.xsd \
+.venv/bin/xsdata generate resources/xsd/ISO11783_TaskFile_V3-3.xsd \
         --package isoxml.models.base.v3 \
-        --subscriptable-types \
-        --union-type \
         --structure-style clusters \
-        --no-relative-imports        
+        --no-relative-imports
 
-xsdata resources/xsd/ISO11783_TaskFile_V4-3.xsd \
+.venv/bin/xsdata generate resources/xsd/ISO11783_TaskFile_V4-3.xsd \
         --package isoxml.models.base.v4 \
-        --subscriptable-types \
-        --union-type \
         --structure-style clusters \
-        --no-relative-imports 
-        
+        --no-relative-imports
 ```

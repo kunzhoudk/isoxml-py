@@ -25,7 +25,10 @@ from pyproj import CRS, Transformer
 
 import isoxml.models.base.v3 as iso
 import isoxml.models.base.v4 as iso4
-from isoxml.converter.np_grid import from_numpy_array_to_type_1, from_numpy_array_to_type_2
+from isoxml.converter.np_grid import (
+    from_numpy_array_to_type_1,
+    from_numpy_array_to_type_2,
+)
 from isoxml.converter.shapely_geom import ShapelyConverterV3, ShapelyConverterV4
 from isoxml.models.ddi_entities import DDEntity
 from isoxml.util.isoxml_io import isoxml_to_dir, isoxml_to_text, isoxml_to_zip
@@ -81,6 +84,26 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=10.0,
         help="Grid cell size in meters in projected CRS (default: 10).",
+    )
+    parser.add_argument(
+        "--boundary-mask",
+        choices=["center", "strict", "touch"],
+        default="touch",
+        help=(
+            "Boundary masking strategy. 'center' keeps cells whose center is inside boundary; "
+            "'strict' keeps only cells fully covered by boundary; "
+            "'touch' keeps cells whose area intersects both polygon and boundary."
+        ),
+    )
+    parser.add_argument(
+        "--grid-extent",
+        choices=["rx", "boundary", "union"],
+        default="rx",
+        help=(
+            "Bounding box source for grid rows/columns and XML grid origin/size: "
+            "'rx' (prescription polygons), 'boundary' (partfield boundary), "
+            "'union' (combined extent)."
+        ),
     )
     parser.add_argument(
         "--input-crs",
@@ -165,13 +188,24 @@ def _normalize_unit_text(raw_unit: str | None) -> str | None:
     return None
 
 
-def _detect_unit_from_shp(gdf: gpd.GeoDataFrame, value_field: str) -> tuple[str | None, str | None]:
+def _detect_unit_from_shp(
+    gdf: gpd.GeoDataFrame, value_field: str
+) -> tuple[str | None, str | None]:
     candidate_cols: list[str] = []
     paired_col = f"{value_field}_unit"
     if paired_col in gdf.columns:
         candidate_cols.append(paired_col)
 
-    preferred = {"unit", "units", "uom", "value_unit", "rate_unit", "dose_unit", "app_unit", "application_unit"}
+    preferred = {
+        "unit",
+        "units",
+        "uom",
+        "value_unit",
+        "rate_unit",
+        "dose_unit",
+        "app_unit",
+        "application_unit",
+    }
     for col in gdf.columns:
         if col == "geometry":
             continue
@@ -184,14 +218,20 @@ def _detect_unit_from_shp(gdf: gpd.GeoDataFrame, value_field: str) -> tuple[str 
         series = gdf[col].dropna()
         if series.empty:
             continue
-        normalized = {u for u in (_normalize_unit_text(v) for v in series.unique()) if u is not None}
+        normalized = {
+            u
+            for u in (_normalize_unit_text(v) for v in series.unique())
+            if u is not None
+        }
         if len(normalized) == 1:
             detected = next(iter(normalized))
             return detected, col
     return None, None
 
 
-def _resolve_value_unit(gdf: gpd.GeoDataFrame, requested_unit: str, value_field: str) -> tuple[str, str]:
+def _resolve_value_unit(
+    gdf: gpd.GeoDataFrame, requested_unit: str, value_field: str
+) -> tuple[str, str]:
     if requested_unit != "auto":
         return requested_unit, "cli"
 
@@ -259,22 +299,30 @@ def _resolve_value_field(gdf: gpd.GeoDataFrame, requested: str | None) -> str:
 
 
 def _rasterize_to_grid(
-    gdf_metric: gpd.GeoDataFrame,
+    gdf_grid: gpd.GeoDataFrame,
+    boundary_geom_grid: shp.Geometry,
     value_field: str,
-    cell_size_m: float,
+    rows: int,
+    cols: int,
+    grid_bounds: tuple[float, float, float, float],
+    boundary_mask_mode: str,
 ) -> tuple[np.ndarray, np.ndarray, float, float, int, int]:
-    if cell_size_m <= 0:
-        raise ValueError("--cell-size-m must be > 0")
+    if rows <= 0 or cols <= 0:
+        raise ValueError("Grid rows/cols must be > 0")
+    if boundary_mask_mode not in {"center", "strict", "touch"}:
+        raise ValueError(f"Unsupported boundary mask mode: {boundary_mask_mode}")
 
-    minx, miny, maxx, maxy = gdf_metric.total_bounds
-    cols = max(1, math.ceil((maxx - minx) / cell_size_m))
-    rows = max(1, math.ceil((maxy - miny) / cell_size_m))
+    minx, miny, maxx, maxy = [float(v) for v in grid_bounds]
+    cell_east_size = (maxx - minx) / cols
+    cell_north_size = (maxy - miny) / rows
+    if cell_east_size <= 0 or cell_north_size <= 0:
+        raise ValueError("Invalid grid bounds: non-positive cell size.")
 
     # row 0 starts at the minimum northing (south). This matches ISOXML's bottom-up grid axis.
     grid_data = np.zeros((rows, cols), dtype=np.float32)
     coverage = np.zeros((rows, cols), dtype=bool)
 
-    for feature in gdf_metric[[value_field, "geometry"]].itertuples(index=False):
+    for feature in gdf_grid[[value_field, "geometry"]].itertuples(index=False):
         value = float(feature[0])
         if not np.isfinite(value):
             continue
@@ -283,25 +331,65 @@ def _rasterize_to_grid(
             if polygon.is_empty:
                 continue
             p_minx, p_miny, p_maxx, p_maxy = polygon.bounds
-            c0 = max(0, int(math.floor((p_minx - minx) / cell_size_m)))
-            c1 = min(cols - 1, int(math.ceil((p_maxx - minx) / cell_size_m)) - 1)
-            r0 = max(0, int(math.floor((p_miny - miny) / cell_size_m)))
-            r1 = min(rows - 1, int(math.ceil((p_maxy - miny) / cell_size_m)) - 1)
+            c0 = max(0, int(math.floor((p_minx - minx) / cell_east_size)))
+            c1 = min(cols - 1, int(math.ceil((p_maxx - minx) / cell_east_size)) - 1)
+            r0 = max(0, int(math.floor((p_miny - miny) / cell_north_size)))
+            r1 = min(rows - 1, int(math.ceil((p_maxy - miny) / cell_north_size)) - 1)
             if c0 > c1 or r0 > r1:
                 continue
 
-            xs = minx + (np.arange(c0, c1 + 1, dtype=np.float64) + 0.5) * cell_size_m
-            ys = miny + (np.arange(r0, r1 + 1, dtype=np.float64) + 0.5) * cell_size_m
-            x_grid, y_grid = np.meshgrid(xs, ys)
-            points = shp.points(x_grid.ravel(), y_grid.ravel())
-            mask = shp.covers(polygon, points)
-            if not np.any(mask):
-                continue
-
-            hit_idx = np.flatnonzero(mask)
             local_cols = c1 - c0 + 1
-            hit_rows = (hit_idx // local_cols) + r0
-            hit_cols = (hit_idx % local_cols) + c0
+            local_rows_count = r1 - r0 + 1
+
+            if boundary_mask_mode == "touch":
+                col_offsets = np.arange(local_cols, dtype=np.int32)
+                row_offsets = np.arange(local_rows_count, dtype=np.int32)
+                col_grid, row_grid = np.meshgrid(col_offsets, row_offsets)
+
+                west = minx + (c0 + col_grid.ravel()) * cell_east_size
+                south = miny + (r0 + row_grid.ravel()) * cell_north_size
+                cell_boxes = shp.box(
+                    west, south, west + cell_east_size, south + cell_north_size
+                )
+
+                poly_mask = shp.intersects(polygon, cell_boxes)
+                boundary_mask = shp.intersects(boundary_geom_grid, cell_boxes)
+                keep_mask = np.logical_and(poly_mask, boundary_mask)
+                if not np.any(keep_mask):
+                    continue
+                local_rows = row_grid.ravel()[keep_mask]
+                local_cols_idx = col_grid.ravel()[keep_mask]
+            else:
+                xs = minx + (np.arange(c0, c1 + 1, dtype=np.float64) + 0.5) * cell_east_size
+                ys = miny + (np.arange(r0, r1 + 1, dtype=np.float64) + 0.5) * cell_north_size
+                x_grid, y_grid = np.meshgrid(xs, ys)
+                points = shp.points(x_grid.ravel(), y_grid.ravel())
+                keep_mask = shp.covers(polygon, points)
+                if boundary_mask_mode == "center":
+                    keep_mask = np.logical_and(
+                        keep_mask, shp.covers(boundary_geom_grid, points)
+                    )
+                if not np.any(keep_mask):
+                    continue
+
+                hit_idx = np.flatnonzero(keep_mask)
+                local_rows = hit_idx // local_cols
+                local_cols_idx = hit_idx % local_cols
+
+                if boundary_mask_mode == "strict":
+                    west = minx + (c0 + local_cols_idx) * cell_east_size
+                    south = miny + (r0 + local_rows) * cell_north_size
+                    cell_boxes = shp.box(
+                        west, south, west + cell_east_size, south + cell_north_size
+                    )
+                    boundary_keep_mask = shp.covers(boundary_geom_grid, cell_boxes)
+                    if not np.any(boundary_keep_mask):
+                        continue
+                    local_rows = local_rows[boundary_keep_mask]
+                    local_cols_idx = local_cols_idx[boundary_keep_mask]
+
+            hit_rows = local_rows + r0
+            hit_cols = local_cols_idx + c0
             grid_data[hit_rows, hit_cols] = value
             coverage[hit_rows, hit_cols] = True
 
@@ -343,16 +431,26 @@ def _count_decimals(value: float, max_decimals: int = 7) -> int:
     return min(max_decimals, len(text.split(".")[1]))
 
 
-def _validate_taskdata_xsd(task_data: iso.Iso11783TaskData | iso4.Iso11783TaskData, xml_version: str) -> Path:
-    xsd_filename = "ISO11783_TaskFile_V4-3.xsd" if xml_version == "4" else "ISO11783_TaskFile_V3-3.xsd"
-    xsd_path = Path(__file__).resolve().parent.parent / "resources" / "xsd" / xsd_filename
+def _validate_taskdata_xsd(
+    task_data: iso.Iso11783TaskData | iso4.Iso11783TaskData, xml_version: str
+) -> Path:
+    xsd_filename = (
+        "ISO11783_TaskFile_V4-3.xsd"
+        if xml_version == "4"
+        else "ISO11783_TaskFile_V3-3.xsd"
+    )
+    xsd_path = (
+        Path(__file__).resolve().parent.parent / "resources" / "xsd" / xsd_filename
+    )
     xmlschema.validate(isoxml_to_text(task_data), xsd_path)
     return xsd_path
 
 
 def build_isoxml_from_shp(
     args: argparse.Namespace,
-) -> tuple[iso.Iso11783TaskData | iso4.Iso11783TaskData, dict[str, bytes], str, str, str]:
+) -> tuple[
+    iso.Iso11783TaskData | iso4.Iso11783TaskData, dict[str, bytes], str, str, str
+]:
     shp_path = args.shp_path
     if not shp_path.exists():
         raise FileNotFoundError(f"Shapefile not found: {shp_path}")
@@ -369,7 +467,9 @@ def build_isoxml_from_shp(
     effective_unit, unit_source = _resolve_value_unit(gdf, args.value_unit, value_field)
 
     if args.boundary_shp is None:
-        raise ValueError("Missing --boundary-shp. Boundary shapefile is required for PFD.")
+        raise ValueError(
+            "Missing --boundary-shp. Boundary shapefile is required for PFD."
+        )
     if not args.boundary_shp.exists():
         raise FileNotFoundError(f"Boundary shapefile not found: {args.boundary_shp}")
 
@@ -388,11 +488,42 @@ def build_isoxml_from_shp(
         raise ValueError("Could not estimate a projected CRS from input geometry.")
     gdf_metric = gdf_wgs84.to_crs(metric_crs)
     gdf_boundary_metric = gdf_boundary_wgs84.to_crs(metric_crs)
+    rx_metric_union = shp.unary_union(gdf_metric.geometry.values)
+    rx_wgs84_union = shp.unary_union(gdf_wgs84.geometry.values)
+    boundary_metric_union = shp.unary_union(gdf_boundary_metric.geometry.values)
+    boundary_wgs84_union = shp.unary_union(gdf_boundary_wgs84.geometry.values)
+    if boundary_metric_union.is_empty:
+        raise ValueError("Boundary geometry is empty after projection.")
+    if rx_metric_union.is_empty or rx_wgs84_union.is_empty:
+        raise ValueError("Prescription geometry is empty after projection.")
+
+    if args.grid_extent == "boundary":
+        extent_metric_geom = boundary_metric_union
+        extent_wgs84_geom = boundary_wgs84_union
+    elif args.grid_extent == "union":
+        extent_metric_geom = shp.unary_union([rx_metric_union, boundary_metric_union])
+        extent_wgs84_geom = shp.unary_union([rx_wgs84_union, boundary_wgs84_union])
+    else:
+        extent_metric_geom = rx_metric_union
+        extent_wgs84_geom = rx_wgs84_union
+
+    if extent_metric_geom.is_empty or extent_wgs84_geom.is_empty:
+        raise ValueError(f"Grid extent geometry is empty (mode: {args.grid_extent}).")
+
+    extent_metric_bounds = extent_metric_geom.bounds
+    metric_width = float(extent_metric_bounds[2]) - float(extent_metric_bounds[0])
+    metric_height = float(extent_metric_bounds[3]) - float(extent_metric_bounds[1])
+    cols = max(1, math.ceil(metric_width / args.cell_size_m))
+    rows = max(1, math.ceil(metric_height / args.cell_size_m))
 
     grid_values, coverage, origin_x, origin_y, rows, cols = _rasterize_to_grid(
-        gdf_metric=gdf_metric,
+        gdf_grid=gdf_wgs84,
+        boundary_geom_grid=boundary_wgs84_union,
         value_field=value_field,
-        cell_size_m=args.cell_size_m,
+        rows=rows,
+        cols=cols,
+        grid_bounds=extent_wgs84_geom.bounds,
+        boundary_mask_mode=args.boundary_mask,
     )
 
     if args.xml_version == "4":
@@ -423,10 +554,12 @@ def build_isoxml_from_shp(
         unit_designator=_trim(vpn_unit, 32),
     )
 
-    boundary_wgs84 = shp.unary_union(gdf_boundary_wgs84.geometry.values)
+    boundary_wgs84 = boundary_wgs84_union
     if boundary_wgs84.geom_type == "Polygon":
         partfield_polygons = [
-            shp_converter.to_iso_polygon(boundary_wgs84, iso_module.PolygonType.PartfieldBoundary)
+            shp_converter.to_iso_polygon(
+                boundary_wgs84, iso_module.PolygonType.PartfieldBoundary
+            )
         ]
     elif boundary_wgs84.geom_type == "MultiPolygon":
         partfield_polygons = shp_converter.to_iso_polygon_list(
@@ -435,10 +568,10 @@ def build_isoxml_from_shp(
     else:
         raise ValueError("Union geometry is not polygonal.")
 
-    boundary_metric = shp.unary_union(gdf_boundary_metric.geometry.values)
+    boundary_metric = boundary_metric_union
     partfield_area_m2 = int(round(boundary_metric.area))
 
-    min_lon, min_lat, max_lon, max_lat = gdf_wgs84.total_bounds
+    min_lon, min_lat, max_lon, max_lat = extent_wgs84_geom.bounds
     origin_lon = float(min_lon)
     origin_lat = float(min_lat)
     cell_east_deg = (float(max_lon) - float(min_lon)) / cols
@@ -449,7 +582,9 @@ def build_isoxml_from_shp(
 
     partfield = iso_module.Partfield(
         id="PFD100",
-        designator=_infer_partfield_name(gdf_boundary_wgs84, args.boundary_shp, args.partfield_name),
+        designator=_infer_partfield_name(
+            gdf_boundary_wgs84, args.boundary_shp, args.partfield_name
+        ),
         area=partfield_area_m2,
         customer_id_ref=customer.id,
         farm_id_ref=farm.id,
@@ -557,7 +692,9 @@ def build_isoxml_from_shp(
 
 def main() -> None:
     args = parse_args()
-    task_data, refs, value_field, effective_unit, unit_source = build_isoxml_from_shp(args)
+    task_data, refs, value_field, effective_unit, unit_source = build_isoxml_from_shp(
+        args
+    )
 
     validated_xsd_path = None
     if not args.no_xsd_validate:
@@ -578,6 +715,8 @@ def main() -> None:
     print(f"  input:      {args.shp_path}")
     print(f"  boundary:   {args.boundary_shp}")
     print(f"  grid type:  {args.grid_type}")
+    print(f"  bmask:      {args.boundary_mask}")
+    print(f"  gextent:    {args.grid_extent}")
     print(f"  value field:{value_field}")
     print(f"  value unit: {effective_unit} (source: {unit_source})")
     print(f"  grid:       {grid.maximum_row} x {grid.maximum_column}")

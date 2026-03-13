@@ -31,7 +31,7 @@ def main() -> None:
     base_dir = Path(__file__).parent
 
     # Change this path to your TASKDATA folder or zip file.
-    source = base_dir / "output" / "TASKDATA1"
+    source = base_dir / "output" / "small_xml_v3_auto"
 
     # Change this if the grid uses a different DDI.
     ddi = DDEntity.from_id(6)
@@ -72,8 +72,8 @@ def main() -> None:
     print(f"  unique values: {np.unique(grid_data).size}")
     print(f"  non-zero cells: {int(np.count_nonzero(grid_data))}")
 
-    rows_to_show = min(5, grid_data.shape[0])
-    cols_to_show = min(8, grid_data.shape[1])
+    rows_to_show = max(0, grid_data.shape[0])
+    cols_to_show = max(8, grid_data.shape[1])
     print(f"\nTop-left preview ({rows_to_show} x {cols_to_show})")
     print(grid_data[:rows_to_show, :cols_to_show])
 
