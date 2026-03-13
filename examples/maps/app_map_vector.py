@@ -14,7 +14,7 @@ import xmlschema
 
 import isoxml.models.base.v4 as iso
 from isoxml.geometry import ShapelyConverterV4
-from isoxml.io import write_taskdata_dir
+from isoxml.io import write_taskdata_to_dir
 from isoxml.models.ddi_entities import DDEntity
 from isoxml.resources import xsd_path
 
@@ -100,5 +100,5 @@ task_data = iso.Iso11783TaskData(
 
 data_dir = base_dir / 'output' / 'app_map_vector'
 data_dir.mkdir(parents=True, exist_ok=True)
-write_taskdata_dir(data_dir, task_data)
+write_taskdata_to_dir(data_dir, task_data)
 xmlschema.validate(data_dir / 'TASKDATA.XML', xsd_path("4"))

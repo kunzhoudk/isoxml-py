@@ -7,13 +7,13 @@ import shapely as shp
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.grids import to_numpy_array
+from isoxml.grids import decode_grid_binary
 from isoxml.models.ddi_entities import DDEntity
 from isoxml.prescriptions._grid.taskdata import (
-    build_iso_context,
-    build_taskdata_result,
+    assemble_grid_taskdata_result,
+    build_iso_workflow_context,
+    conversion_factor_to_ddi,
     infer_partfield_name,
-    unit_factor_to_ddi,
 )
 from isoxml.prescriptions._grid.types import (
     GridFromShpOptions,
@@ -68,21 +68,21 @@ def _options(grid_type: str, xml_version: str = "3") -> GridFromShpOptions:
     )
 
 
-def test_build_iso_context__when_version_changes__expect_matching_model_modules():
-    context_v3 = build_iso_context("3")
-    context_v4 = build_iso_context("4")
+def test_build_iso_workflow_context__when_version_changes__expect_matching_model_modules():
+    context_v3 = build_iso_workflow_context("3")
+    context_v4 = build_iso_workflow_context("4")
 
     assert context_v3.iso_module is iso3
     assert context_v4.iso_module is iso4
 
 
-def test_unit_factor_to_ddi__when_supported_and_unsupported_units__expect_expected_behavior():
+def test_conversion_factor_to_ddi__when_supported_and_unsupported_units__expect_expected_behavior():
     ddi = DDEntity.from_id(6)
-    assert unit_factor_to_ddi("ddi", ddi=ddi) == 1.0
-    assert unit_factor_to_ddi("kg/ha", ddi=ddi) == 100.0
+    assert conversion_factor_to_ddi("ddi", ddi=ddi) == 1.0
+    assert conversion_factor_to_ddi("kg/ha", ddi=ddi) == 100.0
 
     with pytest.raises(ValueError, match="Unsupported input unit"):
-        unit_factor_to_ddi("lb/ac", ddi=ddi)
+        conversion_factor_to_ddi("lb/ac", ddi=ddi)
 
 
 def test_infer_partfield_name__when_explicit_and_fallback_values__expect_expected_name_resolution():
@@ -99,7 +99,7 @@ def test_infer_partfield_name__when_explicit_and_fallback_values__expect_expecte
     assert infer_partfield_name(gdf, Path("boundary.shp"), None) == "demo_field"
 
 
-def test_build_taskdata_result__when_grid_type_1__expect_lookup_grid_and_multiple_treatment_zones():
+def test_assemble_grid_taskdata_result__when_grid_type_1__expect_lookup_grid_and_multiple_treatment_zones():
     prepared = _prepared_inputs()
     rasterized = RasterizedGrid(
         values=np.array([[0.0, 10.0], [10.0, 20.0]], dtype=np.float32),
@@ -109,16 +109,16 @@ def test_build_taskdata_result__when_grid_type_1__expect_lookup_grid_and_multipl
         extent_wgs84_bounds=(10.0, 50.0, 10.02, 50.02),
     )
 
-    result = build_taskdata_result(_options("1"), prepared, rasterized)
+    result = assemble_grid_taskdata_result(_options("1"), prepared, rasterized)
     grid = result.task_data.tasks[0].grids[0]
-    grid_arr = to_numpy_array(result.refs[grid.filename], grid, scale=False)
+    grid_arr = decode_grid_binary(result.refs[grid.filename], grid, scale=False)
 
     assert grid.type == iso3.GridType.GridType1
     assert len(result.task_data.tasks[0].treatment_zones) == 3
     assert set(np.unique(grid_arr)) == {0, 1, 2}
 
 
-def test_build_taskdata_result__when_grid_type_2_v4__expect_binary_grid_and_default_zone_reference():
+def test_assemble_grid_taskdata_result__when_grid_type_2_v4__expect_binary_grid_and_default_zone_reference():
     prepared = _prepared_inputs()
     rasterized = RasterizedGrid(
         values=np.array([[0.0, 10.0], [20.0, 30.0]], dtype=np.float32),
@@ -128,10 +128,10 @@ def test_build_taskdata_result__when_grid_type_2_v4__expect_binary_grid_and_defa
         extent_wgs84_bounds=(10.0, 50.0, 10.02, 50.02),
     )
 
-    result = build_taskdata_result(_options("2", xml_version="4"), prepared, rasterized)
+    result = assemble_grid_taskdata_result(_options("2", xml_version="4"), prepared, rasterized)
     grid = result.task_data.tasks[0].grids[0]
-    raw = to_numpy_array(result.refs[grid.filename], grid, scale=False)
-    raw_3d = to_numpy_array(
+    raw = decode_grid_binary(result.refs[grid.filename], grid, scale=False)
+    raw_3d = decode_grid_binary(
         result.refs[grid.filename],
         grid,
         ddi_list=[DDEntity.from_id(6)],

@@ -13,17 +13,17 @@ def _extract_grid_shape(grid) -> tuple[int, int]:
     return (grid.maximum_row, grid.maximum_column)
 
 
-def from_numpy_array(arr: np.ndarray, grid: iso3.Grid | iso4.Grid) -> bytes:
+def encode_grid_binary(arr: np.ndarray, grid: iso3.Grid | iso4.Grid) -> bytes:
     match grid.type:
         case iso3.GridType.GridType1 | iso4.GridType.GridType1:
-            return from_numpy_array_to_type_1(arr, grid)
+            return encode_grid_type_1_binary(arr, grid)
         case iso3.GridType.GridType2 | iso4.GridType.GridType2:
-            return from_numpy_array_to_type_2(arr, grid)
+            return encode_grid_type_2_binary(arr, grid)
         case _:
             raise NotImplementedError
 
 
-def to_numpy_array(
+def decode_grid_binary(
     grid_bin: bytes,
     grid: iso3.Grid | iso4.Grid,
     ddi_list: list[DDEntity] | None = None,
@@ -48,7 +48,7 @@ def to_numpy_array(
             raise NotImplementedError
 
 
-def from_numpy_array_to_type_1(arr: np.ndarray, grid: iso3.Grid | iso4.Grid) -> bytes:
+def encode_grid_type_1_binary(arr: np.ndarray, grid: iso3.Grid | iso4.Grid) -> bytes:
     """Convert a NumPy array into ISOXML grid type 1 binary format."""
 
     if arr.dtype != np.uint8:
@@ -59,7 +59,7 @@ def from_numpy_array_to_type_1(arr: np.ndarray, grid: iso3.Grid | iso4.Grid) -> 
     return arr.tobytes(order="C")
 
 
-def from_numpy_array_to_type_2(
+def encode_grid_type_2_binary(
     arr: np.ndarray,
     grid: iso3.Grid | iso4.Grid,
     ddi_list: list[DDEntity] | None = None,
@@ -86,8 +86,8 @@ def from_numpy_array_to_type_2(
 
 
 __all__ = [
-    "from_numpy_array",
-    "from_numpy_array_to_type_1",
-    "from_numpy_array_to_type_2",
-    "to_numpy_array",
+    "decode_grid_binary",
+    "encode_grid_binary",
+    "encode_grid_type_1_binary",
+    "encode_grid_type_2_binary",
 ]

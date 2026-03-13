@@ -18,8 +18,8 @@ from pathlib import Path
 
 import isoxml.models.base.v3 as iso
 from isoxml.geometry import ShapelyConverterV3
-from isoxml.grids import from_numpy_array_to_type_2
-from isoxml.io import write_taskdata_zip
+from isoxml.grids import encode_grid_type_2_binary
+from isoxml.io import write_taskdata_to_zip
 from isoxml.models.ddi_entities import DDEntity
 
 base_dir = Path(__file__).resolve().parents[1]
@@ -66,7 +66,7 @@ grid = iso.Grid(
     type=iso.GridType.GridType2,
     treatment_zone_code=treatment_0.code,
 )
-grid_bin = from_numpy_array_to_type_2(grid_data, grid, ddi_list=[dd_entity])
+grid_bin = encode_grid_type_2_binary(grid_data, grid, ddi_list=[dd_entity])
 
 task = iso.Task(
     id="TSK100",
@@ -93,4 +93,4 @@ task_data = iso.Iso11783TaskData(
 )
 
 with open(output_path, "wb") as zip_file:
-    write_taskdata_zip(zip_file, task_data, {grid.filename: grid_bin})
+    write_taskdata_to_zip(zip_file, task_data, {grid.filename: grid_bin})

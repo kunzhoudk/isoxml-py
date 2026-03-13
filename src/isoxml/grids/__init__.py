@@ -1,15 +1,15 @@
 """Grid binary conversion helpers."""
 
 from .binary import (
-    from_numpy_array,
-    from_numpy_array_to_type_1,
-    from_numpy_array_to_type_2,
-    to_numpy_array,
+    decode_grid_binary,
+    encode_grid_binary,
+    encode_grid_type_1_binary,
+    encode_grid_type_2_binary,
 )
 
 __all__ = [
-    "from_numpy_array",
-    "from_numpy_array_to_type_1",
-    "from_numpy_array_to_type_2",
-    "to_numpy_array",
+    "decode_grid_binary",
+    "encode_grid_binary",
+    "encode_grid_type_1_binary",
+    "encode_grid_type_2_binary",
 ]

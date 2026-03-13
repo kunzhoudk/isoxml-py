@@ -14,7 +14,7 @@ from pathlib import Path
 
 import numpy as np
 
-from isoxml.grids import to_numpy_array
+from isoxml.grids import decode_grid_binary
 from isoxml.io import load_taskdata_from_path, load_taskdata_from_zip
 from isoxml.models.ddi_entities import DDEntity
 
@@ -50,7 +50,7 @@ def main() -> None:
     if not isinstance(grid_bin, bytes):
         raise ValueError(f"Missing binary data for {grid.filename}.bin")
 
-    grid_data = to_numpy_array(grid_bin, grid, ddi_list=[ddi], scale=True)
+    grid_data = decode_grid_binary(grid_bin, grid, ddi_list=[ddi], scale=True)
     if grid_data.ndim == 3 and grid_data.shape[-1] == 1:
         grid_data = grid_data[:, :, 0]
 

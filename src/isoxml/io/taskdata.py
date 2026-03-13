@@ -135,7 +135,7 @@ def dump_taskdata_to_text(
     return _SERIALIZER.render(task_data)
 
 
-def write_taskdata_dir(
+def write_taskdata_to_dir(
     dir_path: Path,
     task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData,
     ext_refs: dict[str, bytes | iso3.ExternalFileContents | iso4.ExternalFileContents]
@@ -161,7 +161,7 @@ def write_taskdata_dir(
             raise ValueError(f"unknown type {type(ref_data)} of external ref {ref_name}")
 
 
-def write_taskdata_zip(
+def write_taskdata_to_zip(
     target,
     task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData,
     ext_refs: dict[str, bytes | iso3.ExternalFileContents | iso4.ExternalFileContents]
@@ -193,6 +193,6 @@ __all__ = [
     "load_taskdata_from_path",
     "load_taskdata_from_text",
     "load_taskdata_from_zip",
-    "write_taskdata_dir",
-    "write_taskdata_zip",
+    "write_taskdata_to_dir",
+    "write_taskdata_to_zip",
 ]

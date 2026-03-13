@@ -12,8 +12,8 @@ from pathlib import Path
 
 import isoxml.models.base.v3 as iso
 from isoxml.geometry import ShapelyConverterV3
-from isoxml.grids import from_numpy_array_to_type_1
-from isoxml.io import write_taskdata_zip
+from isoxml.grids import encode_grid_type_1_binary
+from isoxml.io import write_taskdata_to_zip
 from isoxml.models.ddi_entities import DDEntity
 from dataclasses import replace
 
@@ -46,7 +46,7 @@ grid = iso.Grid(
     filename="GRD00000",
     type=iso.GridType.GridType1
 )
-grid_bin = from_numpy_array_to_type_1(grid_data, grid)
+grid_bin = encode_grid_type_1_binary(grid_data, grid)
 
 pdv_0 = iso.ProcessDataVariable(
     process_data_ddi=bytes(DDEntity.from_id(6)),
@@ -87,4 +87,4 @@ task_data = iso.Iso11783TaskData(
 )
 
 with open(output_path, 'wb') as zip_file:
-    write_taskdata_zip(zip_file, task_data, {grid.filename: grid_bin})
+    write_taskdata_to_zip(zip_file, task_data, {grid.filename: grid_bin})

@@ -19,7 +19,7 @@ import shapely as shp
 from pyproj import Transformer
 
 from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
-from isoxml.grids import to_numpy_array
+from isoxml.grids import decode_grid_binary
 from isoxml.io import load_taskdata_from_path, load_taskdata_from_zip
 from isoxml.models.ddi_entities import DDEntity
 
@@ -113,10 +113,10 @@ def type1_code_to_value(task_data, task) -> dict[int, float]:
 def decode_grid_values(task_data, task, grid, grid_bin: bytes, ddi: DDEntity) -> np.ndarray:
     grid_type = str(getattr(grid.type, "value", grid.type))
     if grid_type == "1":
-        arr_code = to_numpy_array(grid_bin, grid, scale=False)
+        arr_code = decode_grid_binary(grid_bin, grid, scale=False)
         code_to_val = type1_code_to_value(task_data, task)
         return np.vectorize(lambda code: code_to_val.get(int(code), 0.0))(arr_code).astype(np.float32)
-    arr = to_numpy_array(grid_bin, grid, ddi_list=[ddi], scale=True)
+    arr = decode_grid_binary(grid_bin, grid, ddi_list=[ddi], scale=True)
     if arr.ndim == 3 and arr.shape[-1] == 1:
         arr = arr[:, :, 0]
     return arr.astype(np.float32)

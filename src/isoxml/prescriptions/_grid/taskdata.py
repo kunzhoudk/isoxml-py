@@ -9,7 +9,7 @@ import numpy as np
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.geometry.shapely import ShapelyConverterV3, ShapelyConverterV4
-from isoxml.grids.binary import from_numpy_array_to_type_1, from_numpy_array_to_type_2
+from isoxml.grids.binary import encode_grid_type_1_binary, encode_grid_type_2_binary
 from isoxml.models.ddi_entities import DDEntity
 from isoxml.prescriptions._grid.types import (
     GridFromShpOptions,
@@ -20,11 +20,11 @@ from isoxml.prescriptions._grid.types import (
 )
 
 
-def trim(text: str, max_len: int) -> str:
+def truncate_text(text: str, max_len: int) -> str:
     return text[:max_len]
 
 
-def unit_factor_to_ddi(input_unit: str, ddi: DDEntity) -> float:
+def conversion_factor_to_ddi(input_unit: str, ddi: DDEntity) -> float:
     if input_unit == "ddi":
         return 1.0
     if input_unit == "kg/ha":
@@ -36,7 +36,7 @@ def unit_factor_to_ddi(input_unit: str, ddi: DDEntity) -> float:
     raise ValueError(f"Unsupported input unit: {input_unit}")
 
 
-def build_iso_context(xml_version: str) -> IsoWorkflowContext:
+def build_iso_workflow_context(xml_version: str) -> IsoWorkflowContext:
     if xml_version == "4":
         return IsoWorkflowContext(
             iso_module=iso4,
@@ -52,24 +52,24 @@ def build_iso_context(xml_version: str) -> IsoWorkflowContext:
     )
 
 
-def build_customer(xml_version: str):
+def build_default_customer(xml_version: str):
     if xml_version == "4":
         return iso4.Customer(id="CTR100", last_name="customer")
     return iso3.Customer(id="CTR100", designator="customer")
 
 
-def to_decimal_9(value: float) -> Decimal:
+def to_decimal_9_places(value: float) -> Decimal:
     return Decimal(f"{value:.9f}")
 
 
-def count_decimals(value: float, max_decimals: int = 7) -> int:
+def count_decimal_places(value: float, max_decimals: int = 7) -> int:
     text = f"{value:.12f}".rstrip("0").rstrip(".")
     if "." not in text:
         return 0
     return min(max_decimals, len(text.split(".")[1]))
 
 
-def _first_string_value(series) -> str | None:
+def _first_nonempty_string(series) -> str | None:
     try:
         from pandas.api.types import is_object_dtype, is_string_dtype
     except ModuleNotFoundError:  # pragma: no cover - pandas comes with geopandas
@@ -90,7 +90,7 @@ def _first_string_value(series) -> str | None:
 
 def infer_partfield_name(gdf_boundary_wgs84, shp_path, explicit_name: str | None) -> str:
     if explicit_name:
-        return trim(explicit_name, 32)
+        return truncate_text(explicit_name, 32)
 
     columns_by_lower_name = {
         col.lower(): col for col in gdf_boundary_wgs84.columns if col != "geometry"
@@ -107,36 +107,36 @@ def infer_partfield_name(gdf_boundary_wgs84, shp_path, explicit_name: str | None
     for col in preferred_columns:
         actual_col = columns_by_lower_name.get(col)
         if actual_col is not None:
-            value = _first_string_value(gdf_boundary_wgs84[actual_col])
+            value = _first_nonempty_string(gdf_boundary_wgs84[actual_col])
             if value is not None:
-                return trim(value, 32)
+                return truncate_text(value, 32)
 
     for col in gdf_boundary_wgs84.columns:
         if col == "geometry":
             continue
-        value = _first_string_value(gdf_boundary_wgs84[col])
+        value = _first_nonempty_string(gdf_boundary_wgs84[col])
         if value is not None:
-            return trim(value, 32)
-    return trim(shp_path.stem, 32)
+            return truncate_text(value, 32)
+    return truncate_text(shp_path.stem, 32)
 
 
-def build_taskdata_result(
+def assemble_grid_taskdata_result(
     options: GridFromShpOptions,
     prepared: PreparedGridInputs,
     rasterized: RasterizedGrid,
 ) -> GridFromShpResult:
     """Build ISOXML task data and binary refs from prepared inputs."""
 
-    context = build_iso_context(options.xml_version)
+    context = build_iso_workflow_context(options.xml_version)
     iso_module = context.iso_module
     shp_converter = context.shapely_converter
 
     dd_entity = DDEntity.from_id(options.ddi)
-    factor_to_ddi = unit_factor_to_ddi(prepared.effective_unit, dd_entity)
+    factor_to_ddi = conversion_factor_to_ddi(prepared.effective_unit, dd_entity)
     grid_values = rasterized.values * factor_to_ddi
 
     vpn_scale = dd_entity.bit_resolution / factor_to_ddi
-    vpn_decimals = count_decimals(vpn_scale)
+    vpn_decimals = count_decimal_places(vpn_scale)
     vpn_unit = (
         prepared.effective_unit
         if prepared.effective_unit != "ddi"
@@ -147,7 +147,7 @@ def build_taskdata_result(
         offset=0,
         scale=Decimal(str(vpn_scale)),
         number_of_decimals=vpn_decimals,
-        unit_designator=trim(vpn_unit, 32),
+        unit_designator=truncate_text(vpn_unit, 32),
     )
 
     if prepared.boundary_wgs84_union.geom_type == "Polygon":
@@ -170,7 +170,7 @@ def build_taskdata_result(
     cell_east_deg = (float(max_lon) - float(min_lon)) / rasterized.cols
     cell_north_deg = (float(max_lat) - float(min_lat)) / rasterized.rows
 
-    customer = build_customer(options.xml_version)
+    customer = build_default_customer(options.xml_version)
     farm = iso_module.Farm(id="FRM100", designator="farm", customer_id_ref=customer.id)
     partfield = iso_module.Partfield(
         id="PFD100",
@@ -231,7 +231,7 @@ def build_taskdata_result(
             treatment_zones.append(
                 iso_module.TreatmentZone(
                     code=code_int,
-                    designator=trim(f"zone_{code_int}_{value_float:g}", 32),
+                    designator=truncate_text(f"zone_{code_int}_{value_float:g}", 32),
                     process_data_variables=[pdv],
                 )
             )
@@ -239,8 +239,8 @@ def build_taskdata_result(
         grid_kwargs["treatment_zone_code"] = default_tz.code
 
     grid = iso_module.Grid(
-        minimum_north_position=to_decimal_9(float(min_lat)),
-        minimum_east_position=to_decimal_9(float(min_lon)),
+        minimum_north_position=to_decimal_9_places(float(min_lat)),
+        minimum_east_position=to_decimal_9_places(float(min_lon)),
         cell_north_size=float(cell_north_deg),
         cell_east_size=float(cell_east_deg),
         maximum_column=rasterized.cols,
@@ -250,9 +250,9 @@ def build_taskdata_result(
         **grid_kwargs,
     )
     if grid_type == iso_module.GridType.GridType1:
-        grid_bin = from_numpy_array_to_type_1(grid_codes, grid)
+        grid_bin = encode_grid_type_1_binary(grid_codes, grid)
     else:
-        grid_bin = from_numpy_array_to_type_2(
+        grid_bin = encode_grid_type_2_binary(
             grid_values,
             grid,
             ddi_list=[dd_entity],
@@ -261,7 +261,7 @@ def build_taskdata_result(
 
     task = iso_module.Task(
         id="TSK100",
-        designator=trim(f"grid{options.grid_type}_{options.shp_path.stem}", 32),
+        designator=truncate_text(f"grid{options.grid_type}_{options.shp_path.stem}", 32),
         status=context.task_status,
         grids=[grid],
         treatment_zones=treatment_zones,
@@ -274,8 +274,8 @@ def build_taskdata_result(
     )
 
     task_data = iso_module.Iso11783TaskData(
-        management_software_manufacturer=trim(options.software_manufacturer, 32),
-        management_software_version=trim(options.software_version, 32),
+        management_software_manufacturer=truncate_text(options.software_manufacturer, 32),
+        management_software_version=truncate_text(options.software_version, 32),
         data_transfer_origin=context.transfer_origin,
         tasks=[task],
         customers=[customer],

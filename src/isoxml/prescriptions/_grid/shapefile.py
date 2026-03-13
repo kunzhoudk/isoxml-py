@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 
-def load_geopandas():
+def require_geopandas():
     try:
         import geopandas as gpd
     except ModuleNotFoundError as exc:  # pragma: no cover - environment dependent
@@ -24,7 +24,7 @@ def load_geopandas():
     return gpd
 
 
-def iter_polygons(geom):
+def iter_polygon_parts(geom):
     if geom is None or geom.is_empty:
         return
     if geom.geom_type == "Polygon":
@@ -36,7 +36,7 @@ def iter_polygons(geom):
         return
     if geom.geom_type == "GeometryCollection":
         for sub_geom in geom.geoms:
-            yield from iter_polygons(sub_geom)
+            yield from iter_polygon_parts(sub_geom)
 
 
 def ensure_polygon_geometries(gdf: "gpd.GeoDataFrame") -> "gpd.GeoDataFrame":
@@ -45,7 +45,7 @@ def ensure_polygon_geometries(gdf: "gpd.GeoDataFrame") -> "gpd.GeoDataFrame":
 
     polygonal = []
     for geom in gdf.geometry:
-        polygons = list(iter_polygons(geom))
+        polygons = list(iter_polygon_parts(geom))
         polygonal.append(shp.unary_union(polygons) if polygons else None)
 
     gdf["geometry"] = polygonal
@@ -56,7 +56,7 @@ def ensure_polygon_geometries(gdf: "gpd.GeoDataFrame") -> "gpd.GeoDataFrame":
     return gdf
 
 
-def auto_value_field(gdf: "gpd.GeoDataFrame") -> str:
+def infer_value_field(gdf: "gpd.GeoDataFrame") -> str:
     numeric_cols = list(gdf.select_dtypes(include=["number"]).columns)
     if not numeric_cols:
         raise ValueError("No numeric field found. Please pass --value-field.")
@@ -71,7 +71,7 @@ def auto_value_field(gdf: "gpd.GeoDataFrame") -> str:
 
 def resolve_value_field(gdf: "gpd.GeoDataFrame", requested: str | None) -> str:
     if requested is None:
-        return auto_value_field(gdf)
+        return infer_value_field(gdf)
     if requested not in gdf.columns:
         raise ValueError(f"Field '{requested}' does not exist in shapefile.")
     if not np.issubdtype(gdf[requested].dtype, np.number):
@@ -150,11 +150,11 @@ def resolve_value_unit(
     return "ddi", "default"
 
 
-def _read_polygon_shapefile(
+def _load_polygon_layer(
     path,
     input_crs: str | None,
 ):
-    gpd = load_geopandas()
+    gpd = require_geopandas()
     gdf = gpd.read_file(path)
     if gdf.crs is None:
         if input_crs:
@@ -174,11 +174,11 @@ def prepare_grid_inputs(options: GridFromShpOptions) -> PreparedGridInputs:
     if not options.boundary_shp.exists():
         raise FileNotFoundError(f"Boundary shapefile not found: {options.boundary_shp}")
 
-    gdf = _read_polygon_shapefile(options.shp_path, options.input_crs)
+    gdf = _load_polygon_layer(options.shp_path, options.input_crs)
     value_field = resolve_value_field(gdf, options.value_field)
     effective_unit, unit_source = resolve_value_unit(gdf, options.value_unit, value_field)
 
-    gdf_boundary = _read_polygon_shapefile(options.boundary_shp, options.input_crs)
+    gdf_boundary = _load_polygon_layer(options.boundary_shp, options.input_crs)
     gdf_wgs84 = gdf.to_crs("EPSG:4326")
     gdf_boundary_wgs84 = gdf_boundary.to_crs("EPSG:4326")
     metric_crs = gdf_wgs84.estimate_utm_crs()

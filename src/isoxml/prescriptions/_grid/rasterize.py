@@ -7,7 +7,7 @@ import math
 import numpy as np
 import shapely as shp
 
-from isoxml.prescriptions._grid.shapefile import iter_polygons
+from isoxml.prescriptions._grid.shapefile import iter_polygon_parts
 from isoxml.prescriptions._grid.types import PreparedGridInputs, RasterizedGrid
 
 
@@ -92,7 +92,7 @@ def _rasterize_to_grid(
         if not np.isfinite(value):
             continue
         geom = feature[1]
-        for polygon in iter_polygons(geom):
+        for polygon in iter_polygon_parts(geom):
             if polygon.is_empty:
                 continue
             p_minx, p_miny, p_maxx, p_maxy = polygon.bounds

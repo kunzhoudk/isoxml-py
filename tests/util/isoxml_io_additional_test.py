@@ -9,8 +9,8 @@ import isoxml.models.base.v4 as iso4
 from isoxml.io import (
     load_taskdata_from_path,
     load_taskdata_from_text,
-    write_taskdata_dir,
-    write_taskdata_zip,
+    write_taskdata_to_dir,
+    write_taskdata_to_zip,
 )
 from tests.resources.test_resources import TEST_RES_DIR
 
@@ -67,7 +67,7 @@ def test__isoxml_to_dir__when_ref_type_unknown__expect_error():
     task_data = _task_data_minimal_v4()
     with tempfile.TemporaryDirectory() as tmp_dir:
         with pytest.raises(ValueError):
-            write_taskdata_dir(Path(tmp_dir), task_data, {"BADREF": 123})
+            write_taskdata_to_dir(Path(tmp_dir), task_data, {"BADREF": 123})
 
 
 def test__isoxml_to_zip__when_ref_type_unknown__expect_error():
@@ -77,4 +77,4 @@ def test__isoxml_to_zip__when_ref_type_unknown__expect_error():
         with pytest.raises(ValueError):
             with ZipFile(zip_path, "w") as _:
                 pass
-            write_taskdata_zip(zip_path, task_data, {"BADREF": object()})
+            write_taskdata_to_zip(zip_path, task_data, {"BADREF": object()})

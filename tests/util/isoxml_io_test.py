@@ -16,8 +16,8 @@ from isoxml.io import (
     load_taskdata_from_path,
     load_taskdata_from_text,
     load_taskdata_from_zip,
-    write_taskdata_dir,
-    write_taskdata_zip,
+    write_taskdata_to_dir,
+    write_taskdata_to_zip,
 )
 from isoxml.resources import xsd_path
 from tests.resources.test_resources import TEST_RES_DIR
@@ -103,7 +103,7 @@ def test__isoxml_to_dir__when_file_valid__expect_valid_files(task_with_grid):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
-        write_taskdata_dir(tmp_path, task_data, ext_refs)
+        write_taskdata_to_dir(tmp_path, task_data, ext_refs)
         assert os.path.isfile(tmp_path / 'TASKDATA.XML')
         assert os.path.isfile(tmp_path / 'GRD00000.bin')
 
@@ -122,7 +122,7 @@ def test__isoxml_to_dir__when_file_contains_ext_refs__expect_ext_content_written
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
-        write_taskdata_dir(tmp_path, task_data, ext_refs)
+        write_taskdata_to_dir(tmp_path, task_data, ext_refs)
         assert os.path.isfile(tmp_path / 'GRD00000.bin')
         assert os.path.isfile(tmp_path / 'TSK00000.XML')
 
@@ -131,7 +131,7 @@ def test__isoxml_to_zip__when_write_to_buffer__expect_valid_files(task_with_grid
     task_data, ext_refs = task_with_grid
 
     with BytesIO() as buffer:
-        write_taskdata_zip(buffer, task_data, ext_refs)
+        write_taskdata_to_zip(buffer, task_data, ext_refs)
         with ZipFile(buffer, 'r') as zip_archive:
             assert 'TASKDATA/TASKDATA.XML' in zip_archive.namelist()
             assert 'TASKDATA/GRD00000.bin' in zip_archive.namelist()
@@ -144,7 +144,7 @@ def test__isoxml_to_zip__when_write_to_file__expect_valid_files(task_with_grid):
         tmp_path = Path(tmp_dir)
         zip_path = tmp_path / 'TASKDATA.zip'
         with open(zip_path, 'wb') as zip_file:
-            write_taskdata_zip(zip_file, task_data, ext_refs, include_folder=False)
+            write_taskdata_to_zip(zip_file, task_data, ext_refs, include_folder=False)
         with ZipFile(zip_path, 'r') as zip_archive:
             assert 'TASKDATA.XML' in zip_archive.namelist()
             assert 'GRD00000.bin' in zip_archive.namelist()
@@ -163,7 +163,7 @@ def test__isoxml_to_zip__when_file_contains_ext_refs__expect_ext_content_written
     ext_refs[ext_ref.filename] = ext_file
 
     with BytesIO() as buffer:
-        write_taskdata_zip(buffer, task_data, ext_refs)
+        write_taskdata_to_zip(buffer, task_data, ext_refs)
         with ZipFile(buffer, 'r') as zip_archive:
             assert 'TASKDATA/TASKDATA.XML' in zip_archive.namelist()
             assert 'TASKDATA/GRD00000.bin' in zip_archive.namelist()

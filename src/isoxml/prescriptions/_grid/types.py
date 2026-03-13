@@ -36,7 +36,7 @@ class GridFromShpOptions:
 
 @dataclass(frozen=True)
 class GridFromShpResult:
-    """Result bundle produced by `convert_grid_from_shp`."""
+    """Result bundle produced by `build_grid_taskdata_from_shapefile`."""
 
     task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData
     refs: dict[str, bytes]

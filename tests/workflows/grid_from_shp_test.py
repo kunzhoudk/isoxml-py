@@ -6,8 +6,8 @@ import shapely as shp
 
 import isoxml.models.base.v3 as iso3
 from isoxml.geometry import ShapelyConverterV3
-from isoxml.grids import to_numpy_array
-from isoxml.prescriptions import GridFromShpOptions, convert_grid_from_shp
+from isoxml.grids import decode_grid_binary
+from isoxml.prescriptions import GridFromShpOptions, build_grid_taskdata_from_shapefile
 
 gpd = pytest.importorskip("geopandas")
 
@@ -57,7 +57,7 @@ def _grid_boxes_wgs84(grid) -> shp.Geometry:
 
 
 def _non_zero_mask_for_grid_type_1(grid_bin: bytes, grid) -> np.ndarray:
-    arr = to_numpy_array(grid_bin, grid, scale=False)
+    arr = decode_grid_binary(grid_bin, grid, scale=False)
     return arr.ravel() != 0
 
 
@@ -69,8 +69,8 @@ def _partfield_boundary_union(task_data) -> shp.Geometry:
     return shp.unary_union(polygons)
 
 
-def test_convert_grid_from_shp__when_touch__expect_non_zero_cells_intersect_boundary():
-    result = convert_grid_from_shp(
+def test_build_grid_taskdata_from_shapefile__when_touch__expect_non_zero_cells_intersect_boundary():
+    result = build_grid_taskdata_from_shapefile(
         _options(
             REPO_ROOT / "examples" / "input" / "big" / "shp" / "Rx.shp",
             REPO_ROOT / "examples" / "input" / "big" / "boundary" / "Boundary.shp",
@@ -89,8 +89,8 @@ def test_convert_grid_from_shp__when_touch__expect_non_zero_cells_intersect_boun
     assert int(np.count_nonzero(non_zero_outside)) == 0
 
 
-def test_convert_grid_from_shp__when_strict__expect_non_zero_cells_fully_inside_boundary():
-    result = convert_grid_from_shp(
+def test_build_grid_taskdata_from_shapefile__when_strict__expect_non_zero_cells_fully_inside_boundary():
+    result = build_grid_taskdata_from_shapefile(
         _options(
             REPO_ROOT / "examples" / "input" / "small" / "shp" / "Rx.shp",
             REPO_ROOT / "examples" / "input" / "small" / "boundary" / "Boundary.shp",
@@ -109,9 +109,9 @@ def test_convert_grid_from_shp__when_strict__expect_non_zero_cells_fully_inside_
     assert int(np.count_nonzero(non_zero_not_covered)) == 0
 
 
-def test_convert_grid_from_shp__when_grid_extent_boundary__expect_grid_bbox_matches_boundary_bbox():
+def test_build_grid_taskdata_from_shapefile__when_grid_extent_boundary__expect_grid_bbox_matches_boundary_bbox():
     boundary_path = REPO_ROOT / "examples" / "input" / "big" / "boundary" / "Boundary.shp"
-    result = convert_grid_from_shp(
+    result = build_grid_taskdata_from_shapefile(
         _options(
             REPO_ROOT / "examples" / "input" / "big" / "shp" / "Rx.shp",
             boundary_path,
@@ -136,11 +136,11 @@ def test_convert_grid_from_shp__when_grid_extent_boundary__expect_grid_bbox_matc
     assert g_maxy == pytest.approx(float(b_maxy), abs=1e-6)
 
 
-def test_convert_grid_from_shp__when_auto_and_explicit_units__expect_expected_unit_resolution_and_scaling():
+def test_build_grid_taskdata_from_shapefile__when_auto_and_explicit_units__expect_expected_unit_resolution_and_scaling():
     shp_path = REPO_ROOT / "examples" / "input" / "small" / "shp" / "Rx.shp"
     boundary_path = REPO_ROOT / "examples" / "input" / "small" / "boundary" / "Boundary.shp"
 
-    auto_result = convert_grid_from_shp(
+    auto_result = build_grid_taskdata_from_shapefile(
         _options(
             shp_path,
             boundary_path,
@@ -155,7 +155,7 @@ def test_convert_grid_from_shp__when_auto_and_explicit_units__expect_expected_un
     assert auto_result.task_data.tasks[0].grids[0].type == iso3.GridType.GridType1
     assert "GRD00000" in auto_result.refs
 
-    kg_result = convert_grid_from_shp(
+    kg_result = build_grid_taskdata_from_shapefile(
         _options(
             shp_path,
             boundary_path,
@@ -165,7 +165,7 @@ def test_convert_grid_from_shp__when_auto_and_explicit_units__expect_expected_un
             cell_size_m=3.0,
         )
     )
-    ddi_result = convert_grid_from_shp(
+    ddi_result = build_grid_taskdata_from_shapefile(
         _options(
             shp_path,
             boundary_path,
@@ -183,7 +183,7 @@ def test_convert_grid_from_shp__when_auto_and_explicit_units__expect_expected_un
     assert "GRD00000" in kg_result.refs
     assert "GRD00000" in ddi_result.refs
 
-    kg_raw = to_numpy_array(kg_result.refs[kg_grid.filename], kg_grid, scale=False)
-    ddi_raw = to_numpy_array(ddi_result.refs[ddi_grid.filename], ddi_grid, scale=False)
+    kg_raw = decode_grid_binary(kg_result.refs[kg_grid.filename], kg_grid, scale=False)
+    ddi_raw = decode_grid_binary(ddi_result.refs[ddi_grid.filename], ddi_grid, scale=False)
     non_zero = ddi_raw != 0
     assert np.all(kg_raw[non_zero] == ddi_raw[non_zero] * 100)

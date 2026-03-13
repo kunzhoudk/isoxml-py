@@ -7,7 +7,7 @@ The main features:
 * supports v3 and v4
 * read/write directly from zip, TASKDATA-dir or any string
 * conversion between shapely and isoxml geometries
-* conversion of numpy array to grid data binary files
+* encoding and decoding of ISOXML grid binary data with NumPy arrays
 * [generate code](https://github.com/Josephinum-Research/isoxml-py/blob/main/examples/tooling/pycode_generator.py) from existing TASKDATA.XML (via xsdata)
 
 ## Installation

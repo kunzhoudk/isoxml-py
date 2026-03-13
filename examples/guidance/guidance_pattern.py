@@ -4,7 +4,7 @@ import shapely as shp
 
 import isoxml.models.base.v4 as iso
 from isoxml.geometry import ShapelyConverterV4
-from isoxml.io import write_taskdata_dir
+from isoxml.io import write_taskdata_to_dir
 from isoxml.resources import xsd_path
 
 
@@ -86,7 +86,7 @@ base_dir = Path(__file__).resolve().parents[1]
 
 data_dir = base_dir / 'output' / 'example_guidance'
 data_dir.mkdir(parents=True, exist_ok=True)
-write_taskdata_dir(data_dir, task_data)
+write_taskdata_to_dir(data_dir, task_data)
 
 
 try:

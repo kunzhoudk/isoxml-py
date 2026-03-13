@@ -7,10 +7,10 @@ from pathlib import Path
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.io import write_taskdata_dir, write_taskdata_zip
+from isoxml.io import write_taskdata_to_dir, write_taskdata_to_zip
 from isoxml.prescriptions import (
     GridFromShpOptions,
-    convert_grid_from_shp,
+    build_grid_taskdata_from_shapefile,
     validate_taskdata_xsd,
 )
 
@@ -164,7 +164,7 @@ def build_isoxml_from_shp(
     str,
     str,
 ]:
-    result = convert_grid_from_shp(options_from_args(args))
+    result = build_grid_taskdata_from_shapefile(options_from_args(args))
     return (
         result.task_data,
         result.refs,
@@ -183,12 +183,12 @@ def main() -> None:
         validated_xsd_path = validate_taskdata_xsd(task_data, args.xml_version)
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    write_taskdata_dir(args.output_dir, task_data, refs)
+    write_taskdata_to_dir(args.output_dir, task_data, refs)
 
     if args.output_zip is not None:
         args.output_zip.parent.mkdir(parents=True, exist_ok=True)
         with open(args.output_zip, "wb") as zip_file:
-            write_taskdata_zip(zip_file, task_data, refs)
+            write_taskdata_to_zip(zip_file, task_data, refs)
 
     grid = task_data.tasks[0].grids[0]
     print("ISOXML conversion complete:")
