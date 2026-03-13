@@ -1,6 +1,6 @@
-"""Reusable high-level workflows built on top of the core ISOXML models."""
+"""High-level prescription and application map workflows."""
 
-from isoxml.workflows.grid_from_shp import (
+from .grid import (
     GridFromShpOptions,
     GridFromShpResult,
     build_grid_taskdata_from_shapefile,

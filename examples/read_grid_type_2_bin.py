@@ -14,16 +14,16 @@ from pathlib import Path
 
 import numpy as np
 
-from isoxml.converter.np_grid import to_numpy_array
+from isoxml.grids import to_numpy_array
+from isoxml.io import load_taskdata_from_path, load_taskdata_from_zip
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_zip
 
 
 def load_isoxml(source: Path):
     if source.is_dir():
-        return isoxml_from_path(source)
+        return load_taskdata_from_path(source)
     if source.suffix.lower() == ".zip":
-        return isoxml_from_zip(source)
+        return load_taskdata_from_zip(source)
     raise ValueError(f"Unsupported source: {source}")
 
 

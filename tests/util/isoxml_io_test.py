@@ -11,8 +11,14 @@ import xmlschema
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_text, isoxml_from_zip, isoxml_to_dir, isoxml_to_zip, \
-    isoxml_to_text
+from isoxml.io import (
+    isoxml_from_path,
+    isoxml_from_text,
+    isoxml_from_zip,
+    isoxml_to_dir,
+    isoxml_to_text,
+    isoxml_to_zip,
+)
 from resources.resources import RES_DIR
 from tests.resources.test_resources import TEST_RES_DIR
 

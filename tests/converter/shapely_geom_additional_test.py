@@ -4,7 +4,7 @@ import pytest
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.converter.shapely_geom import ShapelyConverterV3
+from isoxml.geometry import ShapelyConverterV3
 
 
 def test__to_shapely_polygon__when_shell_missing__expect_error():

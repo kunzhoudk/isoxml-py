@@ -13,9 +13,10 @@ import geopandas as gpd
 import xmlschema
 
 import isoxml.models.base.v4 as iso
-from isoxml.converter.shapely_geom import ShapelyConverterV4
+from isoxml.geometry import ShapelyConverterV4
+from isoxml.io import write_taskdata_dir
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_to_dir
+from isoxml.resources import XSD_ROOT
 
 shp_converter = ShapelyConverterV4()
 dd_entity = DDEntity.from_id(1)
@@ -99,8 +100,5 @@ task_data = iso.Iso11783TaskData(
 
 data_dir = base_dir / 'output' / 'app_map_vector'
 data_dir.mkdir(parents=True, exist_ok=True)
-isoxml_to_dir(data_dir, task_data)
-
-path_res = base_dir.parent / 'resources'
-
-xmlschema.validate(data_dir / 'TASKDATA.XML', path_res / "xsd/ISO11783_TaskFile_V4-3.xsd")
+write_taskdata_dir(data_dir, task_data)
+xmlschema.validate(data_dir / 'TASKDATA.XML', XSD_ROOT / "ISO11783_TaskFile_V4-3.xsd")

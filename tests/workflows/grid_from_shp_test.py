@@ -5,9 +5,9 @@ import pytest
 import shapely as shp
 
 import isoxml.models.base.v3 as iso3
-from isoxml.converter.np_grid import to_numpy_array
-from isoxml.converter.shapely_geom import ShapelyConverterV3
-from isoxml.workflows.grid_from_shp import GridFromShpOptions, convert_grid_from_shp
+from isoxml.geometry import ShapelyConverterV3
+from isoxml.grids import to_numpy_array
+from isoxml.prescriptions import GridFromShpOptions, convert_grid_from_shp
 
 gpd = pytest.importorskip("geopandas")
 
@@ -187,4 +187,3 @@ def test_convert_grid_from_shp__when_auto_and_explicit_units__expect_expected_un
     ddi_raw = to_numpy_array(ddi_result.refs[ddi_grid.filename], ddi_grid, scale=False)
     non_zero = ddi_raw != 0
     assert np.all(kg_raw[non_zero] == ddi_raw[non_zero] * 100)
-

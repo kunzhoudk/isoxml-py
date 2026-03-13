@@ -3,7 +3,7 @@ from decimal import Decimal
 import numpy as np
 import pytest
 
-from isoxml.converter.np_grid import from_numpy_array_to_type_1, to_numpy_array, from_numpy_array_to_type_2
+from isoxml.grids import from_numpy_array_to_type_1, from_numpy_array_to_type_2, to_numpy_array
 from isoxml.models.base.v3 import Grid, GridType
 from isoxml.models.ddi_entities import DDEntity
 

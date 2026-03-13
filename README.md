@@ -20,16 +20,16 @@ pip install isoxml
 ### import
 
 ```python
-from isoxml.util.isoxml_io import isoxml_from_zip
+from isoxml.io import load_taskdata_from_zip
 
-task_data, bin_data = isoxml_from_zip('/path/to/TASKDATA.zip')
+task_data, bin_data = load_taskdata_from_zip('/path/to/TASKDATA.zip')
 ```
 
 ### export
 
 ```python
 import isoxml.models.base.v4 as iso
-from isoxml.util.isoxml_io import isoxml_to_text
+from isoxml.io import dump_taskdata_to_text
 
 customer = iso.Customer(
     id="CTR0001",
@@ -48,7 +48,7 @@ task_data = iso.Iso11783TaskData(
     farms=[farm]
 )
 
-xml_content = isoxml_to_text(task_data)
+xml_content = dump_taskdata_to_text(task_data)
 
 print(xml_content)
 ```
@@ -63,6 +63,17 @@ print(xml_content)
 ### more
 
 [see examples](https://github.com/Josephinum-Research/isoxml-py/blob/main/examples)
+
+## Project Layout
+
+- `isoxml.models.base`: generated ISOXML dataclasses.
+- `isoxml.io`: task data read/write and external file helpers.
+- `isoxml.geometry`: Shapely conversion helpers.
+- `isoxml.grids`: NumPy grid binary helpers.
+- `isoxml.prescriptions`: high-level application map workflows.
+- `isoxml.cli`: reusable CLI entry points.
+
+Legacy imports under `isoxml.util`, `isoxml.converter`, and `isoxml.workflows` remain available as compatibility shims.
 
 ## 主要功能 | Main Features
 

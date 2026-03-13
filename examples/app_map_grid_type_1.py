@@ -11,10 +11,10 @@ import shapely as shp
 from pathlib import Path
 
 import isoxml.models.base.v3 as iso
-from isoxml.converter.np_grid import from_numpy_array_to_type_1
-from isoxml.converter.shapely_geom import ShapelyConverterV3
+from isoxml.geometry import ShapelyConverterV3
+from isoxml.grids import from_numpy_array_to_type_1
+from isoxml.io import write_taskdata_zip
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_to_zip
 from dataclasses import replace
 
 y, x = (2, 2)
@@ -87,4 +87,4 @@ task_data = iso.Iso11783TaskData(
 )
 
 with open(output_path, 'wb') as zip_file:
-    isoxml_to_zip(zip_file, task_data, {grid.filename: grid_bin})
+    write_taskdata_zip(zip_file, task_data, {grid.filename: grid_bin})

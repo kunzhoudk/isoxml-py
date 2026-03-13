@@ -6,7 +6,7 @@ from zipfile import ZipFile
 import pytest
 
 import isoxml.models.base.v4 as iso4
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_text, isoxml_to_dir, isoxml_to_zip
+from isoxml.io import isoxml_from_path, isoxml_from_text, isoxml_to_dir, isoxml_to_zip
 from tests.resources.test_resources import TEST_RES_DIR
 
 

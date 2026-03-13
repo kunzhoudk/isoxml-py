@@ -29,6 +29,9 @@ dependencies = [
 Homepage = "https://github.com/Josephinum-Research/isoxml-py"
 Issues = "https://github.com/Josephinum-Research/isoxml-py/issues"
 
+[project.scripts]
+isoxml-grid-from-shp = "isoxml.cli.grid_from_shp:main"
+
 [project.optional-dependencies]
 dev = [
     "xsdata[cli]",

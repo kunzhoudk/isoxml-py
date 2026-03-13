@@ -18,10 +18,10 @@ import numpy as np
 import shapely as shp
 from pyproj import Transformer
 
-from isoxml.converter.np_grid import to_numpy_array
-from isoxml.converter.shapely_geom import ShapelyConverterV3, ShapelyConverterV4
+from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
+from isoxml.grids import to_numpy_array
+from isoxml.io import load_taskdata_from_path, load_taskdata_from_zip
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_zip
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,9 +56,9 @@ def parse_args() -> argparse.Namespace:
 
 def load_isoxml(source: Path):
     if source.is_dir():
-        return isoxml_from_path(source)
+        return load_taskdata_from_path(source)
     if source.suffix.lower() == ".zip":
-        return isoxml_from_zip(source)
+        return load_taskdata_from_zip(source)
     raise ValueError(f"Unsupported source: {source}")
 
 
