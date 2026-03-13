@@ -20,13 +20,15 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import shapely as shp
+import xmlschema
 from pyproj import CRS, Transformer
 
 import isoxml.models.base.v3 as iso
+import isoxml.models.base.v4 as iso4
 from isoxml.converter.np_grid import from_numpy_array_to_type_1, from_numpy_array_to_type_2
-from isoxml.converter.shapely_geom import ShapelyConverterV3
+from isoxml.converter.shapely_geom import ShapelyConverterV3, ShapelyConverterV4
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_to_dir, isoxml_to_zip
+from isoxml.util.isoxml_io import isoxml_to_dir, isoxml_to_text, isoxml_to_zip
 
 
 def parse_args() -> argparse.Namespace:
@@ -69,6 +71,12 @@ def parse_args() -> argparse.Namespace:
         help="ISOXML grid type (1=lookup table in XML, 2=values in BIN). Default: 2.",
     )
     parser.add_argument(
+        "--xml-version",
+        choices=["3", "4"],
+        default="3",
+        help="ISOXML task data version to generate (default: 3).",
+    )
+    parser.add_argument(
         "--cell-size-m",
         type=float,
         default=10.0,
@@ -85,6 +93,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="Partfield designator (default: auto from data/file name).",
+    )
+    parser.add_argument(
+        "--boundary-shp",
+        type=Path,
+        default=None,
+        help="Boundary shapefile (.shp) used to build PFD geometry (required).",
     )
     parser.add_argument(
         "--output-dir",
@@ -109,6 +123,11 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default="0.1.0",
         help="ISOXML ManagementSoftwareVersion field.",
+    )
+    parser.add_argument(
+        "--no-xsd-validate",
+        action="store_true",
+        help="Skip XSD validation after generating TASKDATA.",
     )
     return parser.parse_args()
 
@@ -286,7 +305,9 @@ def _rasterize_to_grid(
             grid_data[hit_rows, hit_cols] = value
             coverage[hit_rows, hit_cols] = True
 
-    return grid_data, coverage, minx, miny, rows, cols
+    origin_x = minx
+    origin_y = miny
+    return grid_data, coverage, origin_x, origin_y, rows, cols
 
 
 def _infer_partfield_name(
@@ -305,9 +326,33 @@ def _infer_partfield_name(
     return _trim(shp_path.stem, 32)
 
 
+def _build_customer(xml_version: str):
+    if xml_version == "4":
+        return iso4.Customer(id="CTR100", last_name="customer")
+    return iso.Customer(id="CTR100", designator="customer")
+
+
+def _to_decimal_9(value: float) -> Decimal:
+    return Decimal(f"{value:.9f}")
+
+
+def _count_decimals(value: float, max_decimals: int = 7) -> int:
+    text = f"{value:.12f}".rstrip("0").rstrip(".")
+    if "." not in text:
+        return 0
+    return min(max_decimals, len(text.split(".")[1]))
+
+
+def _validate_taskdata_xsd(task_data: iso.Iso11783TaskData | iso4.Iso11783TaskData, xml_version: str) -> Path:
+    xsd_filename = "ISO11783_TaskFile_V4-3.xsd" if xml_version == "4" else "ISO11783_TaskFile_V3-3.xsd"
+    xsd_path = Path(__file__).resolve().parent.parent / "resources" / "xsd" / xsd_filename
+    xmlschema.validate(isoxml_to_text(task_data), xsd_path)
+    return xsd_path
+
+
 def build_isoxml_from_shp(
     args: argparse.Namespace,
-) -> tuple[iso.Iso11783TaskData, dict[str, bytes], str, str, str]:
+) -> tuple[iso.Iso11783TaskData | iso4.Iso11783TaskData, dict[str, bytes], str, str, str]:
     shp_path = args.shp_path
     if not shp_path.exists():
         raise FileNotFoundError(f"Shapefile not found: {shp_path}")
@@ -323,77 +368,119 @@ def build_isoxml_from_shp(
     value_field = _resolve_value_field(gdf, args.value_field)
     effective_unit, unit_source = _resolve_value_unit(gdf, args.value_unit, value_field)
 
+    if args.boundary_shp is None:
+        raise ValueError("Missing --boundary-shp. Boundary shapefile is required for PFD.")
+    if not args.boundary_shp.exists():
+        raise FileNotFoundError(f"Boundary shapefile not found: {args.boundary_shp}")
+
+    gdf_boundary = gpd.read_file(args.boundary_shp)
+    if gdf_boundary.crs is None:
+        if args.input_crs:
+            gdf_boundary = gdf_boundary.set_crs(args.input_crs)
+        else:
+            raise ValueError("Boundary shapefile has no CRS. Pass --input-crs.")
+    gdf_boundary = _ensure_polygon_geometries(gdf_boundary)
+
     gdf_wgs84 = gdf.to_crs("EPSG:4326")
+    gdf_boundary_wgs84 = gdf_boundary.to_crs("EPSG:4326")
     metric_crs = gdf_wgs84.estimate_utm_crs()
     if metric_crs is None:
         raise ValueError("Could not estimate a projected CRS from input geometry.")
     gdf_metric = gdf_wgs84.to_crs(metric_crs)
+    gdf_boundary_metric = gdf_boundary_wgs84.to_crs(metric_crs)
 
-    grid_values, coverage, minx, miny, rows, cols = _rasterize_to_grid(
+    grid_values, coverage, origin_x, origin_y, rows, cols = _rasterize_to_grid(
         gdf_metric=gdf_metric,
         value_field=value_field,
         cell_size_m=args.cell_size_m,
     )
 
+    if args.xml_version == "4":
+        iso_module = iso4
+        shp_converter = ShapelyConverterV4()
+        task_status = iso4.TaskStatus.Planned
+        transfer_origin = iso4.Iso11783TaskDataDataTransferOrigin.FMIS
+    else:
+        iso_module = iso
+        shp_converter = ShapelyConverterV3()
+        task_status = iso.TaskStatus.Initial
+        transfer_origin = iso.Iso11783TaskDataDataTransferOrigin.FMIS
+
     dd_entity = DDEntity.from_id(args.ddi)
     factor_to_ddi = _unit_factor_to_ddi(effective_unit, dd_entity)
     grid_values = grid_values * factor_to_ddi
-    shp_converter = ShapelyConverterV3()
 
-    boundary_wgs84 = shp.unary_union(gdf_wgs84.geometry.values)
+    # Raw integer in PDV/bin is converted to display value by VPN scale:
+    # display = raw * (ddi.bit_resolution / factor_to_ddi)
+    vpn_scale = dd_entity.bit_resolution / factor_to_ddi
+    vpn_decimals = _count_decimals(vpn_scale)
+    vpn_unit = effective_unit if effective_unit != "ddi" else (dd_entity.unit or "ddi")
+    value_presentation = iso_module.ValuePresentation(
+        id="VPN100",
+        offset=0,
+        scale=Decimal(str(vpn_scale)),
+        number_of_decimals=vpn_decimals,
+        unit_designator=_trim(vpn_unit, 32),
+    )
+
+    boundary_wgs84 = shp.unary_union(gdf_boundary_wgs84.geometry.values)
     if boundary_wgs84.geom_type == "Polygon":
         partfield_polygons = [
-            shp_converter.to_iso_polygon(
-                boundary_wgs84, iso.PolygonType.PartfieldBoundary
-            )
+            shp_converter.to_iso_polygon(boundary_wgs84, iso_module.PolygonType.PartfieldBoundary)
         ]
     elif boundary_wgs84.geom_type == "MultiPolygon":
         partfield_polygons = shp_converter.to_iso_polygon_list(
-            boundary_wgs84, iso.PolygonType.PartfieldBoundary
+            boundary_wgs84, iso_module.PolygonType.PartfieldBoundary
         )
     else:
         raise ValueError("Union geometry is not polygonal.")
 
-    boundary_metric = shp.unary_union(gdf_metric.geometry.values)
+    boundary_metric = shp.unary_union(gdf_boundary_metric.geometry.values)
     partfield_area_m2 = int(round(boundary_metric.area))
 
-    transformer = Transformer.from_crs(metric_crs, CRS.from_epsg(4326), always_xy=True)
-    min_lon, min_lat = transformer.transform(minx, miny)
-    east_lon, _ = transformer.transform(minx + args.cell_size_m, miny)
-    _, north_lat = transformer.transform(minx, miny + args.cell_size_m)
-    cell_east_deg = east_lon - min_lon
-    cell_north_deg = north_lat - min_lat
+    min_lon, min_lat, max_lon, max_lat = gdf_wgs84.total_bounds
+    origin_lon = float(min_lon)
+    origin_lat = float(min_lat)
+    cell_east_deg = (float(max_lon) - float(min_lon)) / cols
+    cell_north_deg = (float(max_lat) - float(min_lat)) / rows
 
-    customer = iso.Customer(id="CTR100", designator="customer")
-    farm = iso.Farm(id="FRM100", designator="farm", customer_id_ref=customer.id)
+    customer = _build_customer(args.xml_version)
+    farm = iso_module.Farm(id="FRM100", designator="farm", customer_id_ref=customer.id)
 
-    partfield = iso.Partfield(
+    partfield = iso_module.Partfield(
         id="PFD100",
-        designator=_infer_partfield_name(gdf_wgs84, shp_path, args.partfield_name),
+        designator=_infer_partfield_name(gdf_boundary_wgs84, args.boundary_shp, args.partfield_name),
         area=partfield_area_m2,
         customer_id_ref=customer.id,
         farm_id_ref=farm.id,
         polygons=partfield_polygons,
     )
 
-    default_tz = iso.TreatmentZone(
+    default_tz = iso_module.TreatmentZone(
         code=0,
         designator="zone_0",
         process_data_variables=[
-            iso.ProcessDataVariable(
+            iso_module.ProcessDataVariable(
                 process_data_ddi=bytes(dd_entity),
                 process_data_value=0,
+                value_presentation_id_ref=value_presentation.id,
             )
         ],
     )
 
-    grid_type = iso.GridType.GridType1 if args.grid_type == "1" else iso.GridType.GridType2
+    grid_type = (
+        iso_module.GridType.GridType1
+        if args.grid_type == "1"
+        else iso_module.GridType.GridType2
+    )
     treatment_zones = [default_tz]
     grid_kwargs: dict[str, object] = {}
 
-    if grid_type == iso.GridType.GridType1:
+    if grid_type == iso_module.GridType.GridType1:
         covered_values = grid_values[coverage]
         unique_values = np.unique(covered_values)
+        # code=0 is reserved for the default zone; avoid creating a duplicate zone for value 0.
+        unique_values = unique_values[unique_values != 0]
         if unique_values.size > 254:
             raise ValueError(
                 f"Grid type 1 supports at most 254 treatment values, got {unique_values.size}. "
@@ -406,12 +493,13 @@ def build_isoxml_from_shp(
             value_float = float(raw_value)
             grid_codes[np.logical_and(coverage, grid_values == raw_value)] = code_int
 
-            pdv = iso.ProcessDataVariable(
+            pdv = iso_module.ProcessDataVariable(
                 process_data_ddi=bytes(dd_entity),
                 process_data_value=int(round(value_float / dd_entity.bit_resolution)),
+                value_presentation_id_ref=value_presentation.id,
             )
             treatment_zones.append(
-                iso.TreatmentZone(
+                iso_module.TreatmentZone(
                     code=code_int,
                     designator=_trim(f"zone_{code_int}_{value_float:g}", 32),
                     process_data_variables=[pdv],
@@ -420,9 +508,9 @@ def build_isoxml_from_shp(
     else:
         grid_kwargs["treatment_zone_code"] = default_tz.code
 
-    grid = iso.Grid(
-        minimum_north_position=Decimal(str(min_lat)),
-        minimum_east_position=Decimal(str(min_lon)),
+    grid = iso_module.Grid(
+        minimum_north_position=_to_decimal_9(origin_lat),
+        minimum_east_position=_to_decimal_9(origin_lon),
         cell_north_size=float(cell_north_deg),
         cell_east_size=float(cell_east_deg),
         maximum_column=cols,
@@ -431,17 +519,17 @@ def build_isoxml_from_shp(
         type=grid_type,
         **grid_kwargs,
     )
-    if grid_type == iso.GridType.GridType1:
+    if grid_type == iso_module.GridType.GridType1:
         grid_bin = from_numpy_array_to_type_1(grid_codes, grid)
     else:
         grid_bin = from_numpy_array_to_type_2(
             grid_values, grid, ddi_list=[dd_entity], scale=True
         )
 
-    task = iso.Task(
+    task = iso_module.Task(
         id="TSK100",
         designator=_trim(f"grid{args.grid_type}_{shp_path.stem}", 32),
-        status=iso.TaskStatus.Initial,
+        status=task_status,
         grids=[grid],
         treatment_zones=treatment_zones,
         customer_id_ref=customer.id,
@@ -452,14 +540,15 @@ def build_isoxml_from_shp(
         out_of_field_treatment_zone_code=default_tz.code,
     )
 
-    task_data = iso.Iso11783TaskData(
+    task_data = iso_module.Iso11783TaskData(
         management_software_manufacturer=_trim(args.software_manufacturer, 32),
         management_software_version=_trim(args.software_version, 32),
-        data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
+        data_transfer_origin=transfer_origin,
         tasks=[task],
         customers=[customer],
         farms=[farm],
         partfields=[partfield],
+        value_presentations=[value_presentation],
     )
 
     refs = {grid.filename: grid_bin}
@@ -469,6 +558,10 @@ def build_isoxml_from_shp(
 def main() -> None:
     args = parse_args()
     task_data, refs, value_field, effective_unit, unit_source = build_isoxml_from_shp(args)
+
+    validated_xsd_path = None
+    if not args.no_xsd_validate:
+        validated_xsd_path = _validate_taskdata_xsd(task_data, args.xml_version)
 
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -480,13 +573,17 @@ def main() -> None:
             isoxml_to_zip(zip_file, task_data, refs)
 
     grid = task_data.tasks[0].grids[0]
-    print("ISOXML v3 conversion complete:")
+    print("ISOXML conversion complete:")
+    print(f"  xml version:{args.xml_version}")
     print(f"  input:      {args.shp_path}")
+    print(f"  boundary:   {args.boundary_shp}")
     print(f"  grid type:  {args.grid_type}")
     print(f"  value field:{value_field}")
     print(f"  value unit: {effective_unit} (source: {unit_source})")
     print(f"  grid:       {grid.maximum_row} x {grid.maximum_column}")
     print(f"  zones:      {len(task_data.tasks[0].treatment_zones)}")
+    if validated_xsd_path is not None:
+        print(f"  xsd:        OK ({validated_xsd_path.name})")
     print(f"  output dir: {output_dir}")
     if args.output_zip is not None:
         print(f"  output zip: {args.output_zip}")
