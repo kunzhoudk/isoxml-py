@@ -12,14 +12,14 @@ import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.models.ddi_entities import DDEntity
 from isoxml.io import (
-    isoxml_from_path,
-    isoxml_from_text,
-    isoxml_from_zip,
-    isoxml_to_dir,
-    isoxml_to_text,
-    isoxml_to_zip,
+    dump_taskdata_to_text,
+    load_taskdata_from_path,
+    load_taskdata_from_text,
+    load_taskdata_from_zip,
+    write_taskdata_dir,
+    write_taskdata_zip,
 )
-from resources.resources import RES_DIR
+from isoxml.resources import xsd_path
 from tests.resources.test_resources import TEST_RES_DIR
 
 
@@ -74,28 +74,28 @@ def task_with_grid():
 
 def test__isoxml_from_text__when_str_valid__expect_pares_isoxml():
     xml_content = """<?xml version="1.0" encoding="UTF-8"?><ISO11783_TaskData VersionMajor="4" VersionMinor="3" ManagementSoftwareManufacturer="josephinum research" ManagementSoftwareVersion="0.0.1" DataTransferOrigin="1"></ISO11783_TaskData>"""
-    task_data = isoxml_from_text(xml_content)
+    task_data = load_taskdata_from_text(xml_content)
     assert isinstance(task_data, iso4.Iso11783TaskData)
 
 
 def test__isoxml_from_xml_file__when_file_valid__expect_pares_isoxml():
     path = TEST_RES_DIR / 'isoxml/v3/grid_type_2/TASKDATA.XML'
-    task_data, ext_refs = isoxml_from_path(path)
+    task_data, ext_refs = load_taskdata_from_path(path)
     assert isinstance(task_data, iso3.Iso11783TaskData)
     assert 'GRD00001' in ext_refs
 
 
 def test__isoxml_from_zip__when_file_valid__expect_pares_isoxml():
     path = TEST_RES_DIR / 'isoxml/v3/grid_type_2/grid_type_2.zip'
-    task_data, ext_refs = isoxml_from_zip(path)
+    task_data, ext_refs = load_taskdata_from_zip(path)
     assert isinstance(task_data, iso3.Iso11783TaskData)
     assert 'GRD00001' in ext_refs
 
 
 def test__isoxml_to_text__when_file_valid__expect_valid_files(task_with_grid):
     task_data, _ = task_with_grid
-    xml_content = isoxml_to_text(task_data)
-    xmlschema.validate(xml_content, RES_DIR / "xsd/ISO11783_TaskFile_V4-3.xsd")
+    xml_content = dump_taskdata_to_text(task_data)
+    xmlschema.validate(xml_content, xsd_path("4"))
 
 
 def test__isoxml_to_dir__when_file_valid__expect_valid_files(task_with_grid):
@@ -103,7 +103,7 @@ def test__isoxml_to_dir__when_file_valid__expect_valid_files(task_with_grid):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
-        isoxml_to_dir(tmp_path, task_data, ext_refs)
+        write_taskdata_dir(tmp_path, task_data, ext_refs)
         assert os.path.isfile(tmp_path / 'TASKDATA.XML')
         assert os.path.isfile(tmp_path / 'GRD00000.bin')
 
@@ -122,7 +122,7 @@ def test__isoxml_to_dir__when_file_contains_ext_refs__expect_ext_content_written
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
-        isoxml_to_dir(tmp_path, task_data, ext_refs)
+        write_taskdata_dir(tmp_path, task_data, ext_refs)
         assert os.path.isfile(tmp_path / 'GRD00000.bin')
         assert os.path.isfile(tmp_path / 'TSK00000.XML')
 
@@ -131,7 +131,7 @@ def test__isoxml_to_zip__when_write_to_buffer__expect_valid_files(task_with_grid
     task_data, ext_refs = task_with_grid
 
     with BytesIO() as buffer:
-        isoxml_to_zip(buffer, task_data, ext_refs)
+        write_taskdata_zip(buffer, task_data, ext_refs)
         with ZipFile(buffer, 'r') as zip_archive:
             assert 'TASKDATA/TASKDATA.XML' in zip_archive.namelist()
             assert 'TASKDATA/GRD00000.bin' in zip_archive.namelist()
@@ -144,7 +144,7 @@ def test__isoxml_to_zip__when_write_to_file__expect_valid_files(task_with_grid):
         tmp_path = Path(tmp_dir)
         zip_path = tmp_path / 'TASKDATA.zip'
         with open(zip_path, 'wb') as zip_file:
-            isoxml_to_zip(zip_file, task_data, ext_refs, include_folder=False)
+            write_taskdata_zip(zip_file, task_data, ext_refs, include_folder=False)
         with ZipFile(zip_path, 'r') as zip_archive:
             assert 'TASKDATA.XML' in zip_archive.namelist()
             assert 'GRD00000.bin' in zip_archive.namelist()
@@ -163,7 +163,7 @@ def test__isoxml_to_zip__when_file_contains_ext_refs__expect_ext_content_written
     ext_refs[ext_ref.filename] = ext_file
 
     with BytesIO() as buffer:
-        isoxml_to_zip(buffer, task_data, ext_refs)
+        write_taskdata_zip(buffer, task_data, ext_refs)
         with ZipFile(buffer, 'r') as zip_archive:
             assert 'TASKDATA/TASKDATA.XML' in zip_archive.namelist()
             assert 'TASKDATA/GRD00000.bin' in zip_archive.namelist()
@@ -172,7 +172,7 @@ def test__isoxml_to_zip__when_file_contains_ext_refs__expect_ext_content_written
 
 def test__isoxml_from_xml_file__when_file_contains_references__expect_pares_all_data():
     path = TEST_RES_DIR / 'isoxml/v4/deutz_export/'
-    task_data, ext_refs = isoxml_from_path(path, external_files='separate')
+    task_data, ext_refs = load_taskdata_from_path(path, external_files='separate')
     assert len(task_data.tasks) == 0
     ext_content = ext_refs['TSK00000']
     assert isinstance(ext_content, iso4.ExternalFileContents)
@@ -181,7 +181,7 @@ def test__isoxml_from_xml_file__when_file_contains_references__expect_pares_all_
 
 def test__isoxml_from_xml_file__when_merging_contains_references__expect_pares_all_data():
     path = TEST_RES_DIR / 'isoxml/v4/deutz_export/'
-    task_data, ext_refs = isoxml_from_path(path, external_files='merge')
+    task_data, ext_refs = load_taskdata_from_path(path, external_files='merge')
     assert len(task_data.tasks) == 2
     assert 'TSK00000' not in ext_refs
     assert isinstance(task_data.tasks[0], iso4.Task)

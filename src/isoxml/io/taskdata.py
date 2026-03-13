@@ -188,22 +188,8 @@ def write_taskdata_zip(
             else:
                 raise ValueError(f"unknown type {type(ref_data)} of external ref {ref_name}")
 
-
-isoxml_from_path = load_taskdata_from_path
-isoxml_from_zip = load_taskdata_from_zip
-isoxml_from_text = load_taskdata_from_text
-isoxml_to_text = dump_taskdata_to_text
-isoxml_to_dir = write_taskdata_dir
-isoxml_to_zip = write_taskdata_zip
-
 __all__ = [
     "dump_taskdata_to_text",
-    "isoxml_from_path",
-    "isoxml_from_text",
-    "isoxml_from_zip",
-    "isoxml_to_dir",
-    "isoxml_to_text",
-    "isoxml_to_zip",
     "load_taskdata_from_path",
     "load_taskdata_from_text",
     "load_taskdata_from_zip",

@@ -13,11 +13,6 @@ This project now separates generated ISOXML models from the handwritten public A
 - `src/isoxml/data/xsd/`: bundled runtime XSD schemas shipped inside the package.
 - `src/isoxml/resources.py`: central resource lookup for bundled package data.
 
-## Compatibility policy
-
-Legacy modules under `isoxml.util`, `isoxml.converter`, and `isoxml.workflows` remain as compatibility shims.
-New code should import from the public packages above instead of the legacy paths.
-
 ## Design intent
 
 - Keep core algorithms and generated dataclasses stable.

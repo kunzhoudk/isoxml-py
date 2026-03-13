@@ -1,6 +1,6 @@
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.util.external_file import merge_ext_content
+from isoxml.io import merge_external_file_contents
 
 
 def test__merge_ext_content__when_not_inplace__expect_unaltered_data():
@@ -14,7 +14,7 @@ def test__merge_ext_content__when_not_inplace__expect_unaltered_data():
     ext_file = iso3.ExternalFileContents(customers=[customer])
     task_data.external_file_references = [ext_ref]
     ext_ref_dict = {'CTR1234': ext_file}
-    merged_task_data, unmerged_refs = merge_ext_content(task_data, ext_ref_dict, inplace=False)
+    merged_task_data, unmerged_refs = merge_external_file_contents(task_data, ext_ref_dict, inplace=False)
     assert customer in merged_task_data.customers
     assert customer not in task_data.customers
     assert unmerged_refs == {}
@@ -32,7 +32,7 @@ def test__merge_ext_content__when_inplace__expect_altered_data():
     ext_file = iso4.ExternalFileContents(customers=[customer])
     task_data.external_file_references = [ext_ref]
     ext_ref_dict = {'CTR1234': ext_file}
-    merge_ext_content(task_data, ext_ref_dict, inplace=True)
+    merge_external_file_contents(task_data, ext_ref_dict, inplace=True)
     assert customer in task_data.customers
     assert ext_ref_dict == {}
 
@@ -46,5 +46,5 @@ def test__merge_ext_content__when_unreferenced_obj_in_dict__expect_obj_remain_in
     customer = iso3.Customer(id='CTR1234', designator='test_ctr')
     ext_file = iso3.ExternalFileContents(customers=[customer])
     ext_ref_dict = {'CTR1234': ext_file}
-    merge_ext_content(task_data, ext_ref_dict, inplace=True)
+    merge_external_file_contents(task_data, ext_ref_dict, inplace=True)
     assert 'CTR1234' in ext_ref_dict

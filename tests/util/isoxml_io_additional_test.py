@@ -6,7 +6,12 @@ from zipfile import ZipFile
 import pytest
 
 import isoxml.models.base.v4 as iso4
-from isoxml.io import isoxml_from_path, isoxml_from_text, isoxml_to_dir, isoxml_to_zip
+from isoxml.io import (
+    load_taskdata_from_path,
+    load_taskdata_from_text,
+    write_taskdata_dir,
+    write_taskdata_zip,
+)
 from tests.resources.test_resources import TEST_RES_DIR
 
 
@@ -21,26 +26,26 @@ def _task_data_minimal_v4() -> iso4.Iso11783TaskData:
 def test__isoxml_from_text__when_version_missing__expect_error():
     xml_content = """<?xml version="1.0" encoding="UTF-8"?><ISO11783_TaskData></ISO11783_TaskData>"""
     with pytest.raises(ValueError):
-        isoxml_from_text(xml_content)
+        load_taskdata_from_text(xml_content)
 
 
 def test__isoxml_from_path__when_taskdata_xml_path__expect_parsed():
     path = TEST_RES_DIR / "isoxml/v3/grid_type_2/TASKDATA.XML"
-    task_data, refs = isoxml_from_path(path)
+    task_data, refs = load_taskdata_from_path(path)
     assert str(getattr(task_data.version_major, "value", task_data.version_major)) == "3"
     assert "GRD00001" in refs
 
 
 def test__isoxml_from_path__when_read_bin_files_false__expect_no_bin_refs():
     path = TEST_RES_DIR / "isoxml/v3/grid_type_2"
-    task_data, refs = isoxml_from_path(path, read_bin_files=False)
+    task_data, refs = load_taskdata_from_path(path, read_bin_files=False)
     assert str(getattr(task_data.version_major, "value", task_data.version_major)) == "3"
     assert refs == {}
 
 
 def test__isoxml_from_path__when_external_files_ignore__expect_no_external_content_loaded():
     path = TEST_RES_DIR / "isoxml/v4/deutz_export"
-    task_data, refs = isoxml_from_path(path, external_files="ignore", read_bin_files=False)
+    task_data, refs = load_taskdata_from_path(path, external_files="ignore", read_bin_files=False)
     assert len(task_data.external_file_references) > 0
     assert refs == {}
 
@@ -55,14 +60,14 @@ def test__isoxml_from_path__when_external_ref_matches_multiple_files__expect_ass
         duplicate.write_text(original.read_text(encoding="utf-8"), encoding="utf-8")
 
         with pytest.raises(AssertionError):
-            isoxml_from_path(tmp_path, external_files="separate", read_bin_files=False)
+            load_taskdata_from_path(tmp_path, external_files="separate", read_bin_files=False)
 
 
 def test__isoxml_to_dir__when_ref_type_unknown__expect_error():
     task_data = _task_data_minimal_v4()
     with tempfile.TemporaryDirectory() as tmp_dir:
         with pytest.raises(ValueError):
-            isoxml_to_dir(Path(tmp_dir), task_data, {"BADREF": 123})
+            write_taskdata_dir(Path(tmp_dir), task_data, {"BADREF": 123})
 
 
 def test__isoxml_to_zip__when_ref_type_unknown__expect_error():
@@ -72,4 +77,4 @@ def test__isoxml_to_zip__when_ref_type_unknown__expect_error():
         with pytest.raises(ValueError):
             with ZipFile(zip_path, "w") as _:
                 pass
-            isoxml_to_zip(zip_path, task_data, {"BADREF": object()})
+            write_taskdata_zip(zip_path, task_data, {"BADREF": object()})

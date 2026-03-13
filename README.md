@@ -73,7 +73,6 @@ print(xml_content)
 - `isoxml.prescriptions`: high-level application map workflows.
 - `isoxml.cli`: reusable CLI entry points.
 
-Legacy imports under `isoxml.util`, `isoxml.converter`, and `isoxml.workflows` remain available as compatibility shims.
 
 ## 主要功能 | Main Features
 

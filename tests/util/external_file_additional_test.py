@@ -1,7 +1,7 @@
 import pytest
 
 import isoxml.models.base.v3 as iso3
-from isoxml.util.external_file import merge_ext_content
+from isoxml.io import merge_external_file_contents
 
 
 def _minimal_task_data_v3() -> iso3.Iso11783TaskData:
@@ -19,7 +19,7 @@ def test__merge_ext_content__when_missing_reference_data__expect_key_error():
     ]
 
     with pytest.raises(KeyError):
-        merge_ext_content(task_data, {}, inplace=True)
+        merge_external_file_contents(task_data, {}, inplace=True)
 
 
 def test__merge_ext_content__when_not_inplace__expect_source_unmodified():
@@ -33,7 +33,7 @@ def test__merge_ext_content__when_not_inplace__expect_source_unmodified():
         )
     }
 
-    merged, remaining = merge_ext_content(task_data, ext_file_obj, inplace=False)
+    merged, remaining = merge_external_file_contents(task_data, ext_file_obj, inplace=False)
 
     assert len(task_data.customers) == 0
     assert len(task_data.external_file_references) == 1
