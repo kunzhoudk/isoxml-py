@@ -10,7 +10,8 @@ This project now separates generated ISOXML models from the handwritten public A
 - `src/isoxml/grids/`: NumPy <-> ISOXML grid binary encoding/decoding.
 - `src/isoxml/prescriptions/`: high-level workflows for building application maps.
 - `src/isoxml/cli/`: reusable CLI entry points.
-- `src/isoxml/resources.py`: central resource lookup for bundled schemas and repository assets.
+- `src/isoxml/data/xsd/`: bundled runtime XSD schemas shipped inside the package.
+- `src/isoxml/resources.py`: central resource lookup for bundled package data.
 
 ## Compatibility policy
 

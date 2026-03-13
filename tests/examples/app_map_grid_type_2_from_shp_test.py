@@ -4,10 +4,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from isoxml.util.isoxml_io import isoxml_from_path
+from isoxml.io import load_taskdata_from_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXAMPLE_SCRIPT = REPO_ROOT / "examples" / "app_map_grid_type_2_from_shp.py"
+EXAMPLE_SCRIPT = REPO_ROOT / "examples" / "maps" / "app_map_grid_type_2_from_shp.py"
 
 
 def _run_example(*args: str) -> subprocess.CompletedProcess[str]:
@@ -51,9 +51,8 @@ def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(
     assert output_dir.joinpath("GRD00000.bin").exists()
     assert output_zip.exists()
 
-    task_data, refs = isoxml_from_path(output_dir)
+    task_data, refs = load_taskdata_from_path(output_dir)
     grid = task_data.tasks[0].grids[0]
     assert int(grid.maximum_row) > 0
     assert int(grid.maximum_column) > 0
     assert grid.filename in refs
-

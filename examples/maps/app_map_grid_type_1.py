@@ -19,7 +19,7 @@ from dataclasses import replace
 
 y, x = (2, 2)
 
-base_dir = Path(__file__).parent
+base_dir = Path(__file__).resolve().parents[1]
 output_path = base_dir / 'output' / 'example_grid_1.zip'
 
 

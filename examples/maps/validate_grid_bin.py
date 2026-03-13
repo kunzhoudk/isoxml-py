@@ -2,8 +2,8 @@
 Validate ISOXML GRD binary content (GridType1/2) and optionally compare with source shapefile values.
 
 Examples:
-    .venv/bin/python examples/validate_grid_bin.py examples/output/big_xml_v4_auto --ddi 6
-    .venv/bin/python examples/validate_grid_bin.py examples/output/big_xml_v4_auto --ddi 6 \
+    .venv/bin/python examples/maps/validate_grid_bin.py examples/output/big_xml_v4_auto --ddi 6
+    .venv/bin/python examples/maps/validate_grid_bin.py examples/output/big_xml_v4_auto --ddi 6 \
         --shp examples/input/big/shp/NDVI_Rx.shp --value-field rate
 """
 
@@ -17,9 +17,9 @@ import numpy as np
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.converter.np_grid import to_numpy_array
+from isoxml.grids import to_numpy_array
+from isoxml.io import load_taskdata_from_path, load_taskdata_from_zip
 from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_zip
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,9 +37,9 @@ def parse_args() -> argparse.Namespace:
 
 def load_isoxml(source: Path):
     if source.is_dir():
-        return isoxml_from_path(source)
+        return load_taskdata_from_path(source)
     if source.suffix.lower() == ".zip":
-        return isoxml_from_zip(source)
+        return load_taskdata_from_zip(source)
     raise ValueError(f"Unsupported source: {source}")
 
 

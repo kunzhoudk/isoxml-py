@@ -5,13 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-PROJECT_ROOT = PACKAGE_ROOT.parents[1]
-RESOURCE_ROOT = PROJECT_ROOT / "resources"
-XSD_ROOT = RESOURCE_ROOT / "xsd"
+DATA_ROOT = PACKAGE_ROOT / "data"
+XSD_ROOT = DATA_ROOT / "xsd"
 
 
 def xsd_path(xml_version: str | int) -> Path:
-    """Return the bundled XSD path for the requested ISOXML major version."""
+    """Return the bundled packaged XSD path for the requested ISOXML major version."""
 
     version = str(xml_version)
     if version == "4":
@@ -27,4 +26,4 @@ def xsd_path(xml_version: str | int) -> Path:
     return path
 
 
-__all__ = ["PACKAGE_ROOT", "PROJECT_ROOT", "RESOURCE_ROOT", "XSD_ROOT", "xsd_path"]
+__all__ = ["DATA_ROOT", "PACKAGE_ROOT", "XSD_ROOT", "xsd_path"]

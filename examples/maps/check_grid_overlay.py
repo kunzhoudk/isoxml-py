@@ -2,8 +2,8 @@
 Plot ISOXML grid overlay against PFD boundary and print alignment metrics.
 
 Examples:
-    .venv/bin/python examples/check_grid_overlay.py examples/output/big_xml_v3_auto
-    .venv/bin/python examples/check_grid_overlay.py examples/output/big_xml_v3_auto \
+    .venv/bin/python examples/maps/check_grid_overlay.py examples/output/big_xml_v3_auto
+    .venv/bin/python examples/maps/check_grid_overlay.py examples/output/big_xml_v3_auto \
         --shp examples/input/big/shp/Rx.shp --out examples/output/big_xml_v3_auto/overlay.png
 """
 

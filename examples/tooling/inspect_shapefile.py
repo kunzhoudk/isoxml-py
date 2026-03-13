@@ -142,7 +142,7 @@ def inspect_shapefile(shp_path: Path) -> None:
 
 def main() -> None:
     # CHANGE THIS PATH to your shapefile
-    shp_path = Path(__file__).parent / "input" / "big" / "shp" / "NDVI_Rx.shp"
+    shp_path = Path(__file__).resolve().parents[1] / "input" / "big" / "shp" / "NDVI_Rx.shp"
 
     if not shp_path.exists():
         print(f"❌ File not found: {shp_path}")

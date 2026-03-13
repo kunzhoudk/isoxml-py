@@ -58,7 +58,8 @@ namespaces = false
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-"isoxml" = ["data/*"]
+"isoxml.data" = ["ddi_entities.json"]
+"isoxml.data.xsd" = ["*.xsd", "README.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

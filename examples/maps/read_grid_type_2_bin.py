@@ -28,7 +28,7 @@ def load_isoxml(source: Path):
 
 
 def main() -> None:
-    base_dir = Path(__file__).parent
+    base_dir = Path(__file__).resolve().parents[1]
 
     # Change this path to your TASKDATA folder or zip file.
     source = base_dir / "output" / "small_xml_v3_auto"

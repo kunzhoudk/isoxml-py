@@ -22,7 +22,7 @@ from isoxml.grids import from_numpy_array_to_type_2
 from isoxml.io import write_taskdata_zip
 from isoxml.models.ddi_entities import DDEntity
 
-base_dir = Path(__file__).parent
+base_dir = Path(__file__).resolve().parents[1]
 output_path = base_dir / "output" / "example_grid_2.zip"
 
 shp_converter = ShapelyConverterV3()

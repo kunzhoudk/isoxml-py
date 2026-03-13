@@ -8,7 +8,7 @@ The main features:
 * read/write directly from zip, TASKDATA-dir or any string
 * conversion between shapely and isoxml geometries
 * conversion of numpy array to grid data binary files
-* [generate code](https://github.com/Josephinum-Research/isoxml-py/blob/main/examples/pycode_generator.py) from existing TASKDATA.XML (via xsdata)
+* [generate code](https://github.com/Josephinum-Research/isoxml-py/blob/main/examples/tooling/pycode_generator.py) from existing TASKDATA.XML (via xsdata)
 
 ## Installation
 ```
@@ -92,19 +92,19 @@ Legacy imports under `isoxml.util`, `isoxml.converter`, and `isoxml.workflows` r
 - 基于多边形的处理区域定义
 - 适合少数处理区域（< 20个）
 - 每个区域独立设置施用参数
-- 示例：[app_map_vector.py](examples/app_map_vector.py)
+- 示例：[app_map_vector.py](examples/maps/app_map_vector.py)
 
 #### 网格型 Type 1（Grid Type 1）
 - 使用查找表原理存储数据
 - 适合少数不同值的情况
 - 实际值存储在 XML 中
-- 示例：[app_map_grid_type_1.py](examples/app_map_grid_type_1.py)
+- 示例：[app_map_grid_type_1.py](examples/maps/app_map_grid_type_1.py)
 
 #### 网格型 Type 2（Grid Type 2）
 - 数据直接编码为二进制文件
 - 适合大量连续变化的数值
 - XML文件保持较小（仅含缩放和偏移信息）
-- 示例：[app_map_grid_type_2.py](examples/app_map_grid_type_2.py)
+- 示例：[app_map_grid_type_2.py](examples/maps/app_map_grid_type_2.py)
 
 📄 **详细比较**: [应用图类型对比文档](docs/application_map_types_comparison.md)
 
@@ -125,13 +125,13 @@ Legacy imports under `isoxml.util`, `isoxml.converter`, and `isoxml.workflows` r
 - 从现有 TASKDATA.XML 文件生成 Python 代码
 - 基于 xsdata 工具链
 - 便于学习和快速开发
-- 示例：[pycode_generator.py](examples/pycode_generator.py)
+- 示例：[pycode_generator.py](examples/tooling/pycode_generator.py)
 
 ### 6. 导航线和引导模式
 - AB线导航（A-B Guidance）
 - 曲线导航（Curve Guidance）
 - 支持引导模式参数设置（幅宽、传播方向等）
-- 示例：[guidance_pattern.py](examples/guidance_pattern.py)
+- 示例：[guidance_pattern.py](examples/guidance/guidance_pattern.py)
 
 ## 应用图类型比较 | Application Map Type Comparison
 
