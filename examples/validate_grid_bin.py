@@ -17,9 +17,9 @@ import numpy as np
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.converter.np_grid import to_numpy_array
-from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_zip
+from isoxml.grid import decode
+from isoxml.models import DDEntity
+from isoxml.io import read_from_path, read_from_zip
 
 
 def parse_args() -> argparse.Namespace:
@@ -37,9 +37,9 @@ def parse_args() -> argparse.Namespace:
 
 def load_isoxml(source: Path):
     if source.is_dir():
-        return isoxml_from_path(source)
+        return read_from_path(source)
     if source.suffix.lower() == ".zip":
-        return isoxml_from_zip(source)
+        return read_from_zip(source)
     raise ValueError(f"Unsupported source: {source}")
 
 
@@ -133,7 +133,7 @@ def main() -> None:
         raise ValueError(f"Missing binary for {grid.filename}.bin")
 
     ddi = DDEntity.from_id(args.ddi)
-    arr_scaled = to_numpy_array(grid_bin, grid, ddi_list=[ddi], scale=True)
+    arr_scaled = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
 
     expected_len = _expected_bin_len(grid, ddi_count=1)
     actual_len = len(grid_bin)
@@ -160,7 +160,7 @@ def main() -> None:
         print("  FAIL: decoded shape mismatch.")
 
     if grid.type in (iso3.GridType.GridType1, iso4.GridType.GridType1):
-        arr_type1 = to_numpy_array(grid_bin, grid, scale=False)
+        arr_type1 = decode(grid_bin, grid, scale=False)
         _validate_type1(task, grid, arr_type1)
         code_map = _type1_code_to_pdv_value(task)
         arr_for_compare = np.vectorize(lambda code: code_map.get(int(code), np.nan))(arr_type1)

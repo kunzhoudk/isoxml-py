@@ -18,7 +18,8 @@ from importlib import resources
 
 # Load all DDI definitions from the bundled JSON file at import time.
 # Keys are converted from strings to ints for direct O(1) lookup.
-with resources.open_text("isoxml.data", "ddi_entities.json", encoding="utf-8") as _fh:
+_json_ref = resources.files("isoxml.data").joinpath("ddi_entities.json")
+with _json_ref.open(encoding="utf-8") as _fh:
     _DD_REGISTRY: dict[int, dict] = {int(k): v for k, v in json.load(_fh).items()}
 
 

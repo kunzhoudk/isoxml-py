@@ -18,10 +18,10 @@ import numpy as np
 import shapely as shp
 from pyproj import Transformer
 
-from isoxml.converter.np_grid import to_numpy_array
-from isoxml.converter.shapely_geom import ShapelyConverterV3, ShapelyConverterV4
-from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_zip
+from isoxml.grid import decode
+from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
+from isoxml.models import DDEntity
+from isoxml.io import read_from_path, read_from_zip
 
 
 def parse_args() -> argparse.Namespace:
@@ -56,9 +56,9 @@ def parse_args() -> argparse.Namespace:
 
 def load_isoxml(source: Path):
     if source.is_dir():
-        return isoxml_from_path(source)
+        return read_from_path(source)
     if source.suffix.lower() == ".zip":
-        return isoxml_from_zip(source)
+        return read_from_zip(source)
     raise ValueError(f"Unsupported source: {source}")
 
 
@@ -113,10 +113,10 @@ def type1_code_to_value(task_data, task) -> dict[int, float]:
 def decode_grid_values(task_data, task, grid, grid_bin: bytes, ddi: DDEntity) -> np.ndarray:
     grid_type = str(getattr(grid.type, "value", grid.type))
     if grid_type == "1":
-        arr_code = to_numpy_array(grid_bin, grid, scale=False)
+        arr_code = decode(grid_bin, grid, scale=False)
         code_to_val = type1_code_to_value(task_data, task)
         return np.vectorize(lambda code: code_to_val.get(int(code), 0.0))(arr_code).astype(np.float32)
-    arr = to_numpy_array(grid_bin, grid, ddi_list=[ddi], scale=True)
+    arr = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
     if arr.ndim == 3 and arr.shape[-1] == 1:
         arr = arr[:, :, 0]
     return arr.astype(np.float32)

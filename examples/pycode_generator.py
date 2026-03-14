@@ -9,12 +9,12 @@ from pathlib import Path
 
 from xsdata.formats.dataclass.serializers import PycodeSerializer
 
-from isoxml.util.isoxml_io import isoxml_from_path
+from isoxml.io import read_from_path
 
 base_dir = Path(__file__).parent
 path = base_dir.parent / "tests" / "resources"
 
-task_data = isoxml_from_path(path/ 'isoxml/v4/cnh_export/TASKDATA.XML')
+task_data = read_from_path(path/ 'isoxml/v4/cnh_export/TASKDATA.XML')
 
 pycode_generator = PycodeSerializer()
 with open(base_dir / 'output' / 'generated_code.py', 'w', encoding='utf-8') as code_file:

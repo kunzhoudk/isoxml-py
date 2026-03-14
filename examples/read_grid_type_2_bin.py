@@ -14,16 +14,16 @@ from pathlib import Path
 
 import numpy as np
 
-from isoxml.converter.np_grid import to_numpy_array
-from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_from_path, isoxml_from_zip
+from isoxml.grid import decode
+from isoxml.models import DDEntity
+from isoxml.io import read_from_path, read_from_zip
 
 
 def load_isoxml(source: Path):
     if source.is_dir():
-        return isoxml_from_path(source)
+        return read_from_path(source)
     if source.suffix.lower() == ".zip":
-        return isoxml_from_zip(source)
+        return read_from_zip(source)
     raise ValueError(f"Unsupported source: {source}")
 
 
@@ -50,7 +50,7 @@ def main() -> None:
     if not isinstance(grid_bin, bytes):
         raise ValueError(f"Missing binary data for {grid.filename}.bin")
 
-    grid_data = to_numpy_array(grid_bin, grid, ddi_list=[ddi], scale=True)
+    grid_data = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
     if grid_data.ndim == 3 and grid_data.shape[-1] == 1:
         grid_data = grid_data[:, :, 0]
 

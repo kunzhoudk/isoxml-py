@@ -11,10 +11,10 @@ import shapely as shp
 from pathlib import Path
 
 import isoxml.models.base.v3 as iso
-from isoxml.converter.np_grid import from_numpy_array_to_type_1
-from isoxml.converter.shapely_geom import ShapelyConverterV3
-from isoxml.models.ddi_entities import DDEntity
-from isoxml.util.isoxml_io import isoxml_to_zip
+from isoxml.grid import encode_type1
+from isoxml.geometry import ShapelyConverterV3
+from isoxml.models import DDEntity
+from isoxml.io import write_to_zip
 from dataclasses import replace
 
 y, x = (2, 2)
@@ -46,7 +46,7 @@ grid = iso.Grid(
     filename="GRD00000",
     type=iso.GridType.GridType1
 )
-grid_bin = from_numpy_array_to_type_1(grid_data, grid)
+grid_bin = encode_type1(grid_data, grid)
 
 pdv_0 = iso.ProcessDataVariable(
     process_data_ddi=bytes(DDEntity.from_id(6)),
@@ -87,4 +87,4 @@ task_data = iso.Iso11783TaskData(
 )
 
 with open(output_path, 'wb') as zip_file:
-    isoxml_to_zip(zip_file, task_data, {grid.filename: grid_bin})
+    write_to_zip(zip_file, task_data, {grid.filename: grid_bin})

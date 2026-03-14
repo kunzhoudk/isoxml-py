@@ -17,7 +17,7 @@ from pathlib import Path
 
 import isoxml.models.base.v3 as iso
 import isoxml.models.base.v4 as iso4
-from isoxml.io.writer import write_to_dir, write_to_zip
+from isoxml.io import write_to_dir, write_to_zip
 from isoxml.pipeline.shp_to_grid import (
     ShpToGridOptions,
     convert,

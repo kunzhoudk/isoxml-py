@@ -30,18 +30,29 @@ Homepage = "https://github.com/Josephinum-Research/isoxml-py"
 Issues = "https://github.com/Josephinum-Research/isoxml-py/issues"
 
 [project.optional-dependencies]
-dev = [
-    "xsdata[cli]",
+# Pipeline extra: shapefile → ISOXML grid conversion
+pipeline = [
     "geopandas",
     "xmlschema",
+]
+# Visualisation / notebook extras (not needed at runtime)
+viz = [
     "jupyter",
     "folium",
     "matplotlib",
     "mapclassify",
 ]
+# Code-generation from XSD (developer tooling)
+codegen = [
+    "xsdata[cli]",
+]
+# Everything for active development
+dev = [
+    "isoxml[pipeline,viz,codegen]",
+]
 test = [
     "pytest",
-    "xmlschema"
+    "xmlschema",
 ]
 
 
@@ -55,7 +66,7 @@ namespaces = false
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-"isoxml" = ["data/*"]
+"isoxml" = ["data/*", "data/xsd/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

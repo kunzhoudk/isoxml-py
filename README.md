@@ -15,42 +15,78 @@ The main features:
 pip install isoxml
 ```
 
-## Usage Examples
-
-### import
-
-```python
-from isoxml.util.isoxml_io import isoxml_from_zip
-
-task_data, bin_data = isoxml_from_zip('/path/to/TASKDATA.zip')
+For shapefile → grid conversion (optional):
+```
+pip install isoxml[pipeline]
 ```
 
-### export
+## Usage Examples
+
+### Reading
+
+```python
+from pathlib import Path
+from isoxml import read_from_zip, read_from_path, read_from_xml
+
+# from a ZIP archive
+task_data, refs = read_from_zip(Path('/path/to/TASKDATA.zip'))
+
+# from a TASKDATA directory
+task_data, refs = read_from_path(Path('/path/to/TASKDATA/'))
+
+# from an XML string
+task_data = read_from_xml(xml_string)
+```
+
+### Writing
 
 ```python
 import isoxml.models.base.v4 as iso
-from isoxml.util.isoxml_io import isoxml_to_text
+from isoxml import to_xml, write_to_dir, write_to_zip
+from pathlib import Path
 
-customer = iso.Customer(
-    id="CTR0001",
-    last_name="demo_customer"
-)
-farm = iso.Farm(
-    id="FRM0001",
-    designator="demo farm",
-    customer_id_ref=customer.id
-)
+customer = iso.Customer(id="CTR0001", last_name="demo_customer")
+farm = iso.Farm(id="FRM0001", designator="demo farm", customer_id_ref=customer.id)
 task_data = iso.Iso11783TaskData(
     management_software_manufacturer="josephinum research",
     management_software_version="0.0.0",
     data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
     customers=[customer],
-    farms=[farm]
+    farms=[farm],
 )
 
-xml_content = isoxml_to_text(task_data)
+# as XML string
+xml_content = to_xml(task_data)
 
-print(xml_content)
+# to a directory
+write_to_dir(Path("output/"), task_data)
+
+# to a ZIP archive
+write_to_zip(Path("output.zip"), task_data)
+```
+
+### Geometry conversion
+
+```python
+import shapely as shp
+import isoxml.models.base.v4 as iso
+from isoxml import ShapelyConverterV4
+
+conv = ShapelyConverterV4()
+shp_polygon = shp.from_wkt("POLYGON ((15.14 48.12, 15.15 48.12, 15.15 48.13, 15.14 48.12))")
+iso_polygon = conv.to_iso_polygon(shp_polygon, iso.PolygonType.PartfieldBoundary)
+```
+
+### Grid encoding / decoding
+
+```python
+import numpy as np
+from isoxml import encode_type2, decode
+from isoxml.models import DDEntity
+
+ddi = DDEntity.from_id(6)
+grid_bytes = encode_type2(numpy_array, grid_element, ddi_list=[ddi])
+numpy_array = decode(grid_bytes, grid_element, ddi_list=[ddi])
 ```
 
 ```xml

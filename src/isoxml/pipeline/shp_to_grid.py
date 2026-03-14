@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from decimal import Decimal
+from importlib import resources as _pkg_resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
@@ -344,11 +345,12 @@ def validate_xsd(
         "ISO11783_TaskFile_V4-3.xsd" if xml_version == "4"
         else "ISO11783_TaskFile_V3-3.xsd"
     )
-    xsd_path = Path(__file__).resolve().parents[3] / "resources" / "xsd" / xsd_name
-    if not xsd_path.exists():
-        raise FileNotFoundError(f"XSD file not found: {xsd_path}")
-    xmlschema.validate(to_xml(task_data), xsd_path)
-    return xsd_path
+    xsd_ref = _pkg_resources.files("isoxml.data.xsd").joinpath(xsd_name)
+    with _pkg_resources.as_file(xsd_ref) as xsd_path:
+        if not xsd_path.exists():
+            raise FileNotFoundError(f"Bundled XSD not found: {xsd_name}")
+        xmlschema.validate(to_xml(task_data), xsd_path)
+    return Path(str(xsd_ref))
 
 
 # ---------------------------------------------------------------------------

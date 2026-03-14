@@ -12,17 +12,20 @@ Writing::
 
 Geometry conversion (requires shapely ≥ 2.0)::
 
-    from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
+    from isoxml import ShapelyConverterV3, ShapelyConverterV4
+    # or: from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
 
 Grid encoding / decoding (requires numpy ≥ 1.26)::
 
-    from isoxml.grid import encode, decode
+    from isoxml import encode, encode_type1, encode_type2, decode
+    # or: from isoxml.grid import encode, decode
 
 ISOBUS Data Dictionary::
 
-    from isoxml.models import DDEntity
+    from isoxml import DDEntity
+    # or: from isoxml.models import DDEntity
 
-Shapefile → grid pipeline (requires geopandas)::
+Shapefile → grid pipeline (requires geopandas; install with ``pip install isoxml[pipeline]``)::
 
     from isoxml.pipeline import ShpToGridOptions, convert
 """
@@ -38,6 +41,12 @@ from isoxml.io import (
     merge_ext_content,
 )
 
+# Geometry converters
+from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
+
+# Grid codec
+from isoxml.grid import decode, encode, encode_type1, encode_type2
+
 # Data Dictionary
 from isoxml.models import DDEntity
 
@@ -50,6 +59,14 @@ __all__ = [
     "write_to_dir",
     "write_to_zip",
     "merge_ext_content",
+    # Geometry
+    "ShapelyConverterV3",
+    "ShapelyConverterV4",
+    # Grid codec
+    "encode",
+    "encode_type1",
+    "encode_type2",
+    "decode",
     # Models
     "DDEntity",
 ]

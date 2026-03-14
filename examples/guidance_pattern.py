@@ -3,8 +3,8 @@ from pathlib import Path
 import shapely as shp
 
 import isoxml.models.base.v4 as iso
-from isoxml.converter.shapely_geom import ShapelyConverterV4
-from isoxml.util.isoxml_io import isoxml_to_dir
+from isoxml.geometry import ShapelyConverterV4
+from isoxml.io import write_to_dir
 
 
 shp_converter = ShapelyConverterV4()
@@ -85,7 +85,7 @@ cwd = Path(__file__).parent
 
 data_dir = cwd / 'output' / 'example_guidance'
 data_dir.mkdir(parents=True, exist_ok=True)
-isoxml_to_dir(data_dir, task_data)
+write_to_dir(data_dir, task_data)
 
 
 try:

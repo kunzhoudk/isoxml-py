@@ -5,8 +5,8 @@ from types import ModuleType
 
 import shapely as shp
 
-import isoxml.models.base.v3 as iso3
-import isoxml.models.base.v4 as iso4
+import isoxml.models.base.v3 as _iso3
+import isoxml.models.base.v4 as _iso4
 
 
 class _ShapelyConverter:
@@ -77,10 +77,11 @@ class _ShapelyConverter:
         """Convert an ISOXML ``LineString`` to a Shapely ``LineString``."""
         coords = [self._coords_from_iso_point(p) for p in iso_line.points]
 
-        # v3 exterior/interior rings are implicitly closed.
+        # v3 exterior/interior rings are implicitly closed; v4 rings are explicit.
+        # Using self._iso ensures the check is version-aware.
         if iso_line.type in (
-            iso3.LineStringType.PolygonExterior,
-            iso3.LineStringType.PolygonInterior,
+            self._iso.LineStringType.PolygonExterior,
+            self._iso.LineStringType.PolygonInterior,
         ):
             if coords[0] != coords[-1]:
                 coords.append(coords[0])
@@ -118,10 +119,7 @@ class _ShapelyConverter:
         holes = []
         for iso_ls in iso_polygon.line_strings:
             shp_ls = self.to_shapely_line_string(iso_ls)
-            if iso_ls.type in (
-                iso3.LineStringType.PolygonInterior,
-                iso4.LineStringType.PolygonInterior,
-            ):
+            if iso_ls.type == self._iso.LineStringType.PolygonInterior:
                 holes.append(shp_ls)
             else:
                 if shell is not None:
@@ -189,11 +187,11 @@ class ShapelyConverterV3(_ShapelyConverter):
     """Converter for ISOXML **v3** geometry models."""
 
     def __init__(self) -> None:
-        super().__init__(iso3)
+        super().__init__(_iso3)
 
 
 class ShapelyConverterV4(_ShapelyConverter):
     """Converter for ISOXML **v4** geometry models."""
 
     def __init__(self) -> None:
-        super().__init__(iso4)
+        super().__init__(_iso4)

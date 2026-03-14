@@ -68,12 +68,17 @@ def read_from_path(
 
     if external_files in ('merge', 'separate'):
         for ext_ref in task_data.external_file_references:
-            assert ext_ref.filetype == iso.ExternalFileReferenceType.XML
+            if ext_ref.filetype != iso.ExternalFileReferenceType.XML:
+                raise ValueError(
+                    f"ExternalFileReference '{ext_ref.filename}' has unsupported "
+                    f"filetype {ext_ref.filetype!r}; only XML is supported."
+                )
             matches = [f for f in dir_entries if f.startswith(ext_ref.filename)]
-            assert len(matches) == 1, (
-                f"Expected exactly one file for external reference '{ext_ref.filename}', "
-                f"found {matches!r}."
-            )
+            if len(matches) != 1:
+                raise ValueError(
+                    f"Expected exactly one file for external reference "
+                    f"'{ext_ref.filename}', found {matches!r}."
+                )
             ext_objects[ext_ref.filename] = _parser.from_path(
                 task_data_path / matches[0],
                 iso.ExternalFileContents,

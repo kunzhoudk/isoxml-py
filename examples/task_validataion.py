@@ -9,7 +9,7 @@ import xmlschema
 from xmlschema import XMLSchemaValidationError
 
 import isoxml.models.base.v4 as iso
-from isoxml.util.isoxml_io import isoxml_to_text
+from isoxml.io import to_xml
 
 base_dir = Path(__file__).parent
 path_resources = base_dir.parent / 'resources'
@@ -20,12 +20,12 @@ task_data_valid = iso.Iso11783TaskData(
     data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS
 )
 
-xml_content = isoxml_to_text(task_data_valid)
+xml_content = to_xml(task_data_valid)
 xmlschema.validate(xml_content, path_resources / "xsd/ISO11783_TaskFile_V4-3.xsd")
 
 task_data_invalid = iso.Iso11783TaskData()
 
 try:
-    xmlschema.validate(isoxml_to_text(task_data_invalid), path_resources / "xsd/ISO11783_TaskFile_V4-3.xsd")
+    xmlschema.validate(to_xml(task_data_invalid), path_resources / "xsd/ISO11783_TaskFile_V4-3.xsd")
 except XMLSchemaValidationError as e:
     print(e)

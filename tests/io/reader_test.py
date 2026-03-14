@@ -75,7 +75,7 @@ def test__read_from_path__when_external_files_ignore__expect_empty_refs():
     assert refs == {}
 
 
-def test__read_from_path__when_duplicate_ext_ref_files__expect_assertion_error():
+def test__read_from_path__when_duplicate_ext_ref_files__expect_value_error():
     src = TEST_RES_DIR / 'isoxml/v4/deutz_export'
     with tempfile.TemporaryDirectory() as tmp_dir:
         dst = Path(tmp_dir) / 'taskdata'
@@ -83,7 +83,7 @@ def test__read_from_path__when_duplicate_ext_ref_files__expect_assertion_error()
         orig = dst / 'TSK00000.XML'
         dup = dst / 'TSK00000_DUP.XML'
         dup.write_text(orig.read_text(encoding='utf-8'), encoding='utf-8')
-        with pytest.raises(AssertionError):
+        with pytest.raises(ValueError):
             read_from_path(dst, external_files='separate', read_bin_files=False)
 
 

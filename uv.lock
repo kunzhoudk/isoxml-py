@@ -966,6 +966,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+codegen = [
+    { name = "xsdata", extra = ["cli"] },
+]
 dev = [
     { name = "folium" },
     { name = "geopandas" },
@@ -976,27 +979,39 @@ dev = [
     { name = "xmlschema" },
     { name = "xsdata", extra = ["cli"] },
 ]
+pipeline = [
+    { name = "geopandas" },
+    { name = "xmlschema" },
+]
 test = [
     { name = "pytest" },
     { name = "xmlschema" },
 ]
+viz = [
+    { name = "folium" },
+    { name = "jupyter" },
+    { name = "mapclassify", version = "2.8.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "mapclassify", version = "2.10.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "matplotlib" },
+]
 
 [package.metadata]
 requires-dist = [
-    { name = "folium", marker = "extra == 'dev'" },
-    { name = "geopandas", marker = "extra == 'dev'" },
-    { name = "jupyter", marker = "extra == 'dev'" },
-    { name = "mapclassify", marker = "extra == 'dev'" },
-    { name = "matplotlib", marker = "extra == 'dev'" },
+    { name = "folium", marker = "extra == 'viz'" },
+    { name = "geopandas", marker = "extra == 'pipeline'" },
+    { name = "isoxml", extras = ["pipeline", "viz", "codegen"], marker = "extra == 'dev'" },
+    { name = "jupyter", marker = "extra == 'viz'" },
+    { name = "mapclassify", marker = "extra == 'viz'" },
+    { name = "matplotlib", marker = "extra == 'viz'" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pytest", marker = "extra == 'test'" },
     { name = "shapely", specifier = ">=2.0" },
-    { name = "xmlschema", marker = "extra == 'dev'" },
+    { name = "xmlschema", marker = "extra == 'pipeline'" },
     { name = "xmlschema", marker = "extra == 'test'" },
     { name = "xsdata", specifier = ">=24.7" },
-    { name = "xsdata", extras = ["cli"], marker = "extra == 'dev'" },
+    { name = "xsdata", extras = ["cli"], marker = "extra == 'codegen'" },
 ]
-provides-extras = ["dev", "test"]
+provides-extras = ["pipeline", "viz", "codegen", "dev", "test"]
 
 [[package]]
 name = "jedi"
