@@ -12,7 +12,6 @@ import isoxml.models.base.v4 as iso4
 from isoxml.io.writer import to_xml, write_to_dir, write_to_zip
 from isoxml.models.ddi import DDEntity
 from resources.resources import RES_DIR
-from tests.resources.test_resources import TEST_RES_DIR
 
 
 @pytest.fixture()

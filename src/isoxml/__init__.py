@@ -54,6 +54,7 @@ from isoxml.pipeline import (
     convert_grid_prescriptions,
     validate_prescription_xsd,
 )
+from isoxml.validation import validate_xsd
 
 # Grid codec
 from isoxml.grid import decode, encode, encode_type1, encode_type2
@@ -81,6 +82,7 @@ __all__ = [
     "GridPrescriptionConversionResult",
     "convert_grid_prescriptions",
     "validate_prescription_xsd",
+    "validate_xsd",
     # Models
     "DDEntity",
 ]

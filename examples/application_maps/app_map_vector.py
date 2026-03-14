@@ -3,12 +3,6 @@ Vector-based application map example.
 
 Creates an ISOXML v4 task where each treatment zone is a polygon with its own
 dose value. Suitable for a small number of clearly defined zones (< ~20).
-
-Tested on: New Holland T7 + IntelliView 12 + Kverneland iXter B18
-Note: terminal cannot select DDI interactively — set it here before export.
-
-Usage:
-    python examples/app_map_vector.py
 """
 
 from importlib import resources
@@ -22,11 +16,11 @@ from isoxml.geometry import ShapelyConverterV4
 from isoxml.io import write_to_dir
 from isoxml.models import DDEntity
 
-BASE_DIR = Path(__file__).parent
-INPUT_PATH = BASE_DIR / "input" / "app_map_vector.geojson"
-OUTPUT_DIR = BASE_DIR / "output" / "app_map_vector"
+EXAMPLES_DIR = Path(__file__).resolve().parents[1]
+INPUT_PATH = EXAMPLES_DIR / "input" / "app_map_vector.geojson"
+OUTPUT_DIR = EXAMPLES_DIR / "output" / "app_map_vector"
 
-DD_ENTITY = DDEntity.from_id(1)  # Setpoint Volume Per Area
+DD_ENTITY = DDEntity.from_id(1)
 converter = ShapelyConverterV4()
 
 

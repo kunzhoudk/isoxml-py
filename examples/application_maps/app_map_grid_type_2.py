@@ -3,16 +3,6 @@ Grid Type 2 application map example.
 
 Grid Type 2 encodes prescription values directly in a binary file as int32.
 The XML only holds scale/offset metadata. Best for many continuous values.
-
-Note: ISOXML grid rows are ordered bottom-up (row 0 = southernmost), so the
-array will appear vertically flipped in most image viewers.
-
-Tested on:
-  - Deutz-Fahr 6140.4 + Bogballe L20W (import/display OK)
-  - New Holland T7 + IntelliView 12 + Kverneland iXter B18 (TC did not accept set-point)
-
-Usage:
-    python examples/app_map_grid_type_2.py
 """
 
 from decimal import Decimal
@@ -27,20 +17,19 @@ from isoxml.grid import encode_type2
 from isoxml.io import write_to_zip
 from isoxml.models import DDEntity
 
-BASE_DIR = Path(__file__).parent
-OUTPUT_PATH = BASE_DIR / "output" / "example_grid_2.zip"
+EXAMPLES_DIR = Path(__file__).resolve().parents[1]
+OUTPUT_PATH = EXAMPLES_DIR / "output" / "example_grid_2.zip"
 
 FIELD_WKT = (
     "POLYGON ((15.1461618 48.1269217, 15.1461618 48.1267442, "
     "15.1463363 48.1267442, 15.1463363 48.1269217, 15.1461618 48.1269217))"
 )
 
-DD_ENTITY = DDEntity.from_id(6)  # Actual Volume Content
+DD_ENTITY = DDEntity.from_id(6)
 converter = ShapelyConverterV3()
 
 
 def main() -> None:
-    # --- field geometry ---
     iso_boundary = converter.to_iso_polygon(
         shp.from_wkt(FIELD_WKT), iso.PolygonType.PartfieldBoundary
     )
@@ -56,11 +45,9 @@ def main() -> None:
         polygons=[iso_boundary],
     )
 
-    # --- prescription values (row 0 = south, row 1 = north) ---
     grid_data = np.array([[0, 1111], [2222, 3333]])
     rows, cols = grid_data.shape
 
-    # Default treatment zone required by GridType2 (actual values come from .bin)
     default_tz = iso.TreatmentZone(
         code=0,
         designator="zone_0",
@@ -110,8 +97,8 @@ def main() -> None:
     )
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUTPUT_PATH, "wb") as f:
-        write_to_zip(f, task_data, {grid.filename: grid_bin})
+    with open(OUTPUT_PATH, "wb") as file_handle:
+        write_to_zip(file_handle, task_data, {grid.filename: grid_bin})
     print(f"Written: {OUTPUT_PATH}")
 
 

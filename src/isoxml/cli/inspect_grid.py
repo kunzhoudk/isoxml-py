@@ -1,22 +1,15 @@
-"""
-Read and inspect an ISOXML Grid Type 2 application map.
-
-Loads TASKDATA from a directory or ZIP, decodes the grid binary, prints
-statistics, and exports the values as CSV.
-
-Usage:
-    python examples/read_grid_type_2_bin.py <source>
-    python examples/read_grid_type_2_bin.py examples/output/example_grid_2/
-    python examples/read_grid_type_2_bin.py examples/output/example_grid_2.zip
-"""
+"""CLI for reading and inspecting ISOXML grid application maps."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Sequence
 
 import numpy as np
 
+import isoxml.models.base.v3 as iso3
+import isoxml.models.base.v4 as iso4
 from isoxml.grid import decode
 from isoxml.io import read_from_path, read_from_zip
 from isoxml.models import DDEntity
@@ -30,23 +23,24 @@ def load(source: Path):
     raise ValueError(f"Expected a directory or .zip file, got: {source}")
 
 
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Inspect an ISOXML Grid Type 2 binary.")
-    p.add_argument(
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    default_path = Path(__file__).resolve().parents[3] / "examples" / "output" / "example_grid_2.zip"
+    parser = argparse.ArgumentParser(description="Inspect an ISOXML grid binary.")
+    parser.add_argument(
         "source",
         nargs="?",
         type=Path,
-        default=Path(__file__).parent / "output" / "example_grid_2.zip",
+        default=default_path,
         help="TASKDATA directory or ZIP file.",
     )
-    p.add_argument("--ddi", type=int, default=6, help="DDI for decoding (default: 6).")
-    p.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
-    p.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
-    return p.parse_args()
+    parser.add_argument("--ddi", type=int, default=6, help="DDI for decoding (default: 6).")
+    parser.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
+    parser.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_args(argv)
     ddi = DDEntity.from_id(args.ddi)
 
     task_data, refs = load(args.source)
@@ -63,7 +57,11 @@ def main() -> None:
     if not isinstance(grid_bin, bytes):
         raise ValueError(f"No binary data found for {grid.filename}.bin")
 
-    arr = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
+    is_type1 = grid.type in (iso3.GridType.GridType1, iso4.GridType.GridType1)
+    if is_type1:
+        arr = decode(grid_bin, grid, scale=False)
+    else:
+        arr = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
     if arr.ndim == 3 and arr.shape[-1] == 1:
         arr = arr[:, :, 0]
 
@@ -73,7 +71,10 @@ def main() -> None:
     print(f"  rows x cols: {grid.maximum_row} x {grid.maximum_column}")
     print(f"  origin (north, east): {grid.minimum_north_position}, {grid.minimum_east_position}")
     print(f"  cell size (north, east): {grid.cell_north_size}, {grid.cell_east_size}")
-    print(f"  DDI: {ddi.ddi:04d} ({ddi.name})")
+    if is_type1:
+        print("  mode: zone codes (Grid Type 1)")
+    else:
+        print(f"  DDI: {ddi.ddi:04d} ({ddi.name})")
 
     print("\nDecoded array")
     print(f"  shape:        {arr.shape}")

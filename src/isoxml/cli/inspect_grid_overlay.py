@@ -1,20 +1,10 @@
-"""
-Check spatial alignment between an ISOXML grid and its partfield boundary.
-
-Decodes the grid binary, builds a GeoDataFrame of cell polygons, overlays the
-partfield boundary, and saves a PNG plot + GeoJSON of cell geometries.
-Also prints centre-offset and bounding-box overlap ratio in metres.
-
-Usage:
-    python examples/check_grid_overlay.py examples/output/rx_grid
-    python examples/check_grid_overlay.py examples/output/rx_grid.zip \\
-        --shp examples/input/small/shp/Rx.shp --out examples/output/overlay.png
-"""
+"""CLI for checking spatial alignment between ISOXML grids and boundaries."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Sequence
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -30,17 +20,31 @@ from isoxml.io import read_from_path, read_from_zip
 from isoxml.models import DDEntity
 
 
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Overlay ISOXML grid on partfield boundary.")
-    p.add_argument("source", type=Path, help="TASKDATA directory or ZIP.")
-    p.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
-    p.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
-    p.add_argument("--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6).")
-    p.add_argument("--show-zero", action="store_true", help="Include zero-value cells in plot.")
-    p.add_argument("--shp", type=Path, default=None, help="Optional shapefile to overlay.")
-    p.add_argument("--out", type=Path, default=None, help="Output PNG path.")
-    p.add_argument("--cells-out", type=Path, default=None, help="Output GeoJSON for grid cells.")
-    return p.parse_args()
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Overlay ISOXML grid on partfield boundary.")
+    parser.add_argument("source", type=Path, help="TASKDATA directory or ZIP.")
+    parser.add_argument(
+        "--task",
+        "--task-index",
+        dest="task",
+        type=int,
+        default=0,
+        help="Task index (default: 0).",
+    )
+    parser.add_argument(
+        "--grid",
+        "--grid-index",
+        dest="grid",
+        type=int,
+        default=0,
+        help="Grid index within task (default: 0).",
+    )
+    parser.add_argument("--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6).")
+    parser.add_argument("--show-zero", action="store_true", help="Include zero-value cells in plot.")
+    parser.add_argument("--shp", type=Path, default=None, help="Optional shapefile to overlay.")
+    parser.add_argument("--out", type=Path, default=None, help="Output PNG path.")
+    parser.add_argument("--cells-out", type=Path, default=None, help="Output GeoJSON for grid cells.")
+    return parser.parse_args(argv)
 
 
 def load(source: Path):
@@ -61,26 +65,26 @@ def _partfield_geometry(task_data, task) -> shp.Geometry | None:
     if not task_data.partfields:
         return None
     conv = _converter(task_data)
-    pfd = next(
-        (p for p in task_data.partfields if p.id == task.partfield_id_ref),
+    partfield = next(
+        (partfield for partfield in task_data.partfields if partfield.id == task.partfield_id_ref),
         task_data.partfields[0],
     )
-    if not pfd or not pfd.polygons:
+    if not partfield or not partfield.polygons:
         return None
-    return shp.unary_union([conv.to_shapely_polygon(poly) for poly in pfd.polygons])
+    return shp.unary_union([conv.to_shapely_polygon(poly) for poly in partfield.polygons])
 
 
 def _type1_code_to_value(task_data, task) -> dict[int, float]:
-    vpn_by_id = {v.id: v for v in getattr(task_data, "value_presentations", []) if v.id}
+    vpn_by_id = {vpn.id: vpn for vpn in getattr(task_data, "value_presentations", []) if vpn.id}
     result: dict[int, float] = {}
-    for tz in task.treatment_zones:
-        if tz.code is None:
+    for treatment_zone in task.treatment_zones:
+        if treatment_zone.code is None:
             continue
-        code = int(tz.code)
-        if not tz.process_data_variables:
+        code = int(treatment_zone.code)
+        if not treatment_zone.process_data_variables:
             result[code] = 0.0
             continue
-        pdv = tz.process_data_variables[0]
+        pdv = treatment_zone.process_data_variables[0]
         raw = float(pdv.process_data_value or 0)
         vpn = vpn_by_id.get(pdv.value_presentation_id_ref)
         if vpn:
@@ -95,7 +99,7 @@ def _decode_values(task_data, task, grid, grid_bin: bytes, ddi: DDEntity) -> np.
     if is_type1:
         raw = decode(grid_bin, grid, scale=False)
         code_map = _type1_code_to_value(task_data, task)
-        return np.vectorize(lambda c: code_map.get(int(c), 0.0))(raw).astype(np.float32)
+        return np.vectorize(lambda code: code_map.get(int(code), 0.0))(raw).astype(np.float32)
     arr = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
     if arr.ndim == 3 and arr.shape[-1] == 1:
         arr = arr[:, :, 0]
@@ -108,43 +112,46 @@ def _cells_geodataframe(grid, values: np.ndarray, show_zero: bool) -> gpd.GeoDat
     dn = float(grid.cell_north_size)
     de = float(grid.cell_east_size)
 
-    rows, cols, data_rows, data_cols, data_vals = [], [], [], [], []
-    for r in range(int(grid.maximum_row)):
-        for c in range(int(grid.maximum_column)):
-            v = float(values[r, c])
-            if not show_zero and v == 0.0:
+    geometries: list[shp.Polygon] = []
+    data_rows: list[int] = []
+    data_cols: list[int] = []
+    data_vals: list[float] = []
+    for row in range(int(grid.maximum_row)):
+        for col in range(int(grid.maximum_column)):
+            value = float(values[row, col])
+            if not show_zero and value == 0.0:
                 continue
-            south = min_n + r * dn
-            west = min_e + c * de
-            rows.append(shp.box(west, south, west + de, south + dn))
-            data_rows.append(r)
-            data_cols.append(c)
-            data_vals.append(v)
+            south = min_n + row * dn
+            west = min_e + col * de
+            geometries.append(shp.box(west, south, west + de, south + dn))
+            data_rows.append(row)
+            data_cols.append(col)
+            data_vals.append(value)
 
     return gpd.GeoDataFrame(
         {"row": data_rows, "col": data_cols, "value": data_vals},
-        geometry=rows,
+        geometry=geometries,
         crs="EPSG:4326",
     )
 
 
-def _alignment_metrics(grid_bbox: shp.Polygon, pfd: shp.Geometry) -> dict[str, float] | None:
-    if pfd is None or pfd.is_empty:
+def _alignment_metrics(grid_bbox: shp.Polygon, partfield: shp.Geometry) -> dict[str, float] | None:
+    if partfield is None or partfield.is_empty:
         return None
-    utm = gpd.GeoSeries([pfd], crs="EPSG:4326").estimate_utm_crs()
+    utm = gpd.GeoSeries([partfield], crs="EPSG:4326").estimate_utm_crs()
     if utm is None:
         return None
-    tr = Transformer.from_crs("EPSG:4326", utm, always_xy=True)
+    transformer = Transformer.from_crs("EPSG:4326", utm, always_xy=True)
 
     def centroid_m(geom):
         cx = (geom.bounds[0] + geom.bounds[2]) / 2
         cy = (geom.bounds[1] + geom.bounds[3]) / 2
-        return tr.transform(cx, cy)
+        return transformer.transform(cx, cy)
 
     gx, gy = centroid_m(grid_bbox)
-    px, py = centroid_m(pfd)
+    px, py = centroid_m(partfield)
 
-    metric = gpd.GeoSeries([grid_bbox, pfd], crs="EPSG:4326").to_crs(utm)
+    metric = gpd.GeoSeries([grid_bbox, partfield], crs="EPSG:4326").to_crs(utm)
     inter = metric.iloc[0].intersection(metric.iloc[1]).area
     union = metric.iloc[0].union(metric.iloc[1]).area
     return {
@@ -154,8 +161,8 @@ def _alignment_metrics(grid_bbox: shp.Polygon, pfd: shp.Geometry) -> dict[str, f
     }
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_args(argv)
     ddi = DDEntity.from_id(args.ddi)
 
     task_data, refs = load(args.source)
@@ -174,14 +181,13 @@ def main() -> None:
 
     values = _decode_values(task_data, task, grid, grid_bin, ddi)
     cells_gdf = _cells_geodataframe(grid, values, args.show_zero)
-    pfd_geom = _partfield_geometry(task_data, task)
+    partfield_geom = _partfield_geometry(task_data, task)
 
-    # --- plot ---
     fig, ax = plt.subplots(figsize=(10, 10))
     if not cells_gdf.empty:
         cells_gdf.plot(column="value", ax=ax, cmap="YlOrRd", legend=True, linewidth=0)
-    if pfd_geom and not pfd_geom.is_empty:
-        gpd.GeoDataFrame(geometry=[pfd_geom], crs="EPSG:4326").boundary.plot(
+    if partfield_geom and not partfield_geom.is_empty:
+        gpd.GeoDataFrame(geometry=[partfield_geom], crs="EPSG:4326").boundary.plot(
             ax=ax, color="magenta", linewidth=2
         )
     if args.shp is not None:
@@ -203,23 +209,22 @@ def main() -> None:
 
     out_geojson = args.cells_out or _default(args.source, "grid_cells.geojson")
     out_geojson.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_geojson, "w", encoding="utf-8") as f:
-        f.write(cells_gdf.to_json(drop_id=True))
+    with open(out_geojson, "w", encoding="utf-8") as file_handle:
+        file_handle.write(cells_gdf.to_json(drop_id=True))
 
-    # --- bounding box ---
     grid_bbox = shp.box(
         float(grid.minimum_east_position),
         float(grid.minimum_north_position),
         float(grid.minimum_east_position) + float(grid.cell_east_size) * int(grid.maximum_column),
         float(grid.minimum_north_position) + float(grid.cell_north_size) * int(grid.maximum_row),
     )
-    metrics = _alignment_metrics(grid_bbox, pfd_geom)
+    metrics = _alignment_metrics(grid_bbox, partfield_geom)
 
     print(f"Source:       {args.source}")
     print(f"Grid:         {grid.maximum_row} rows x {grid.maximum_column} cols")
     print(f"Grid bbox:    {grid_bbox.bounds}")
-    if pfd_geom and not pfd_geom.is_empty:
-        print(f"PFD bbox:     {pfd_geom.bounds}")
+    if partfield_geom and not partfield_geom.is_empty:
+        print(f"PFD bbox:     {partfield_geom.bounds}")
     if metrics:
         print(f"Centre offset: dx={metrics['dx_m']:.2f} m, dy={metrics['dy_m']:.2f} m")
         print(f"Bbox overlap:  {metrics['overlap']:.6f}")

@@ -1,16 +1,34 @@
 # examples
 
-these examples are intended to give you an impression of the functions. 
-common use cases are illustrated, e.g: 
-* creating application maps
-* importing/exporting field boundaries
-* track planning
-* ...
+This directory is now mostly for:
+- demonstration scripts
+- notebooks
+- sample input/output data
+- themed example modules and formal CLI-adjacent data
 
-but before you start, install the development dependencies:
+Before you start, install the development dependencies:
 
 ```bash
 pip install .[dev]
 ```
 
-your use case is not included? we look forward to your feedback or maybe even a PR!
+If you want stable command-line entry points, prefer the CLI commands instead of calling files in `examples/` directly:
+
+```bash
+uv run isoxml-shp-to-prescription --help
+uv run isoxml-convert-prescription --help
+uv run isoxml-inspect-grid-overlay --help
+uv run isoxml-inspect-shapefile --help
+uv run isoxml-validate-grid-bin --help
+uv run isoxml-inspect-grid --help
+uv run isoxml-validate-taskdata --help
+uv run isoxml-generate-pycode --help
+```
+
+Current rough split:
+- `application_maps/`: vector and grid application map demos
+- `guidance/`: guidance pattern demos
+- `partfields/`: partfield export demos
+- `input/`, `output/`: sample data and generated artifacts
+
+If your use case is not included, feedback or a PR is welcome.

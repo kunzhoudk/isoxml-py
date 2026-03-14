@@ -1,20 +1,16 @@
-"""Convert ISOXML prescription packages across XML versions and grid types.
-
-Examples:
-    python examples/convert_grid_prescription.py tests/resources/isoxml/v3/grid_type_2 \
-        --target-xml-version 4 --target-grid-type 1 --output-dir /tmp/isoxml_out
-"""
+"""CLI for converting ISOXML prescription packages."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Sequence
 
 from isoxml.io import read_from_path, read_from_zip, write_to_dir, write_to_zip
 from isoxml.pipeline import convert_grid_prescriptions
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Convert ISOXML prescription grids between XML versions and grid types."
     )
@@ -28,11 +24,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip XSD validation after conversion.",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_args(argv)
     if bool(args.output_dir) == bool(args.output_zip):
         raise SystemExit("Specify exactly one of --output-dir or --output-zip.")
 

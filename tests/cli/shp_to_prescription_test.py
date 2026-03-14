@@ -7,12 +7,11 @@ from pathlib import Path
 from isoxml.io.reader import read_from_path as isoxml_from_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXAMPLE_SCRIPT = REPO_ROOT / "examples" / "app_map_grid_type_2_from_shp.py"
 
 
-def _run_example(*args: str) -> subprocess.CompletedProcess[str]:
+def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(EXAMPLE_SCRIPT), *args],
+        [sys.executable, "-m", "isoxml.cli.shp_to_prescription", *args],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -21,7 +20,7 @@ def _run_example(*args: str) -> subprocess.CompletedProcess[str]:
 
 
 def test_cli_help__when_invoked__expect_expected_arguments_visible():
-    proc = _run_example("--help")
+    proc = _run_cli("--help")
     assert "--boundary-shp" in proc.stdout
     assert "--grid-type" in proc.stdout
     assert "--value-unit" in proc.stdout
@@ -31,7 +30,7 @@ def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(
     output_dir = tmp_path / "taskdata"
     output_zip = tmp_path / "taskdata.zip"
 
-    proc = _run_example(
+    proc = _run_cli(
         "examples/input/small/shp/Rx.shp",
         "--boundary-shp",
         "examples/input/small/boundary/Boundary.shp",
@@ -56,4 +55,3 @@ def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(
     assert int(grid.maximum_row) > 0
     assert int(grid.maximum_column) > 0
     assert grid.filename in refs
-

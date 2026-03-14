@@ -1,15 +1,10 @@
-"""
-Inspect a shapefile to gather information needed for prescription map generation.
+"""CLI for inspecting shapefiles used in prescription generation."""
 
-Prints CRS, field names/types, spatial bounds, sample records, numeric statistics,
-and auto-detected candidate fields for dose and zone identification.
-
-Usage:
-    python examples/inspect_shapefile.py examples/input/small/shp/Rx.shp
-"""
+from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from typing import Sequence
 
 import geopandas as gpd
 
@@ -23,8 +18,8 @@ def inspect(shp_path: Path) -> None:
     print(f"Geometry types: {gdf.geometry.geom_type.unique().tolist()}")
     print(f"CRS:            {gdf.crs}")
     if "MultiPolygon" in gdf.geometry.geom_type.unique():
-        n = int((gdf.geometry.geom_type == "MultiPolygon").sum())
-        print(f"  MultiPolygons: {n}")
+        count = int((gdf.geometry.geom_type == "MultiPolygon").sum())
+        print(f"  MultiPolygons: {count}")
     print()
 
     print("--- Fields ---")
@@ -34,9 +29,9 @@ def inspect(shp_path: Path) -> None:
     print()
 
     print("--- Spatial bounds ---")
-    w, s, e, n = gdf.total_bounds
-    print(f"  West / East:   {w:.8f}  /  {e:.8f}")
-    print(f"  South / North: {s:.8f}  /  {n:.8f}")
+    west, south, east, north = gdf.total_bounds
+    print(f"  West / East:   {west:.8f}  /  {east:.8f}")
+    print(f"  South / North: {south:.8f}  /  {north:.8f}")
     print()
 
     print("--- Sample data (first 5 rows) ---")
@@ -49,46 +44,51 @@ def inspect(shp_path: Path) -> None:
     print("--- Numeric field statistics ---")
     if numeric_cols:
         for col in numeric_cols:
-            s = gdf[col]
-            unique = s.nunique()
-            print(f"  {col}: min={s.min()}, max={s.max()}, mean={s.mean():.2f}, unique={unique}")
+            series = gdf[col]
+            unique = series.nunique()
+            print(
+                f"  {col}: min={series.min()}, max={series.max()}, "
+                f"mean={series.mean():.2f}, unique={unique}"
+            )
             if unique <= 20:
-                print(f"    values: {sorted(s.unique().tolist())}")
+                print(f"    values: {sorted(series.unique().tolist())}")
     else:
         print("  No numeric fields found.")
     print()
 
     print("--- Candidate fields for prescription map ---")
     dose_candidates = [
-        c for c in numeric_cols
-        if any(k in c.lower() for k in ("dose", "rate", "amount", "value", "kg", "fertilizer"))
+        col
+        for col in numeric_cols
+        if any(key in col.lower() for key in ("dose", "rate", "amount", "value", "kg", "fertilizer"))
     ]
     print(f"  Dose/value field: {dose_candidates or numeric_cols}")
 
     zone_candidates = [
-        c for c in text_cols
-        if any(k in c.lower() for k in ("name", "id", "type", "zone", "class"))
+        col
+        for col in text_cols
+        if any(key in col.lower() for key in ("name", "id", "type", "zone", "class"))
     ]
     print(f"  Zone/ID field:    {zone_candidates or text_cols}")
 
 
-def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Inspect a shapefile for prescription map generation.")
-    p.add_argument(
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    default_path = Path(__file__).resolve().parents[3] / "examples" / "input" / "small" / "shp" / "Rx.shp"
+    parser = argparse.ArgumentParser(description="Inspect a shapefile for prescription map generation.")
+    parser.add_argument(
         "shp_path",
         nargs="?",
         type=Path,
-        default=Path(__file__).parent / "input" / "small" / "shp" / "Rx.shp",
+        default=default_path,
         help="Path to shapefile (.shp).",
     )
-    return p.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_args(argv)
     if not args.shp_path.exists():
-        print(f"File not found: {args.shp_path}")
-        return
+        raise SystemExit(f"File not found: {args.shp_path}")
     inspect(args.shp_path)
 
 

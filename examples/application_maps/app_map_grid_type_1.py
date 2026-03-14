@@ -3,11 +3,6 @@ Grid Type 1 application map example.
 
 Grid Type 1 works as a lookup table: each cell stores a treatment zone code
 (uint8) and the actual dose values live in the XML TreatmentZone elements.
-Best suited for a small number of discrete dose levels (< ~10 unique values).
-For many continuous values, prefer Grid Type 2.
-
-Usage:
-    python examples/app_map_grid_type_1.py
 """
 
 from dataclasses import replace
@@ -23,8 +18,8 @@ from isoxml.grid import encode_type1
 from isoxml.io import write_to_zip
 from isoxml.models import DDEntity
 
-BASE_DIR = Path(__file__).parent
-OUTPUT_PATH = BASE_DIR / "output" / "example_grid_1.zip"
+EXAMPLES_DIR = Path(__file__).resolve().parents[1]
+OUTPUT_PATH = EXAMPLES_DIR / "output" / "example_grid_1.zip"
 
 ROWS, COLS = 2, 2
 FIELD_WKT = (
@@ -32,12 +27,11 @@ FIELD_WKT = (
     "15.1463363 48.1267442, 15.1463363 48.1269217, 15.1461618 48.1269217))"
 )
 
-DD_ENTITY = DDEntity.from_id(6)  # Actual Volume Content
+DD_ENTITY = DDEntity.from_id(6)
 converter = ShapelyConverterV3()
 
 
 def main() -> None:
-    # --- field geometry ---
     iso_boundary = converter.to_iso_polygon(
         shp.from_wkt(FIELD_WKT), iso.PolygonType.PartfieldBoundary
     )
@@ -53,7 +47,6 @@ def main() -> None:
         polygons=[iso_boundary],
     )
 
-    # --- grid definition ---
     grid = iso.Grid(
         minimum_north_position=Decimal("48.12674"),
         minimum_east_position=Decimal("15.14615"),
@@ -65,11 +58,9 @@ def main() -> None:
         type=iso.GridType.GridType1,
     )
 
-    # Grid data: each cell value is a treatment zone code (0-3)
     grid_data = np.arange(ROWS * COLS, dtype=np.uint8).reshape(ROWS, COLS)
     grid_bin = encode_type1(grid_data, grid)
 
-    # --- treatment zones (one per unique code, values in DDI base unit) ---
     base_pdv = iso.ProcessDataVariable(
         process_data_ddi=bytes(DD_ENTITY),
         process_data_value=0,
@@ -103,8 +94,8 @@ def main() -> None:
     )
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(OUTPUT_PATH, "wb") as f:
-        write_to_zip(f, task_data, {grid.filename: grid_bin})
+    with open(OUTPUT_PATH, "wb") as file_handle:
+        write_to_zip(file_handle, task_data, {grid.filename: grid_bin})
     print(f"Written: {OUTPUT_PATH}")
 
 
