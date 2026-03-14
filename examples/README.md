@@ -29,6 +29,7 @@ Current rough split:
 - `application_maps/`: vector and grid application map demos
 - `guidance/`: guidance pattern demos
 - `partfields/`: partfield export demos
+- `partfield_viewer.ipynb`: interactive partfield viewer
+- `grid_overlay_viewer.ipynb`: interactive grid/partfield overlay viewer
 - `input/`, `output/`: sample data and generated artifacts
 
-If your use case is not included, feedback or a PR is welcome.
