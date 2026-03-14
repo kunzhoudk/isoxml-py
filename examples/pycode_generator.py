@@ -1,21 +1,36 @@
 """
-if you already have a TASKDATA.XML file that works on your terminal (e.g. has been exported)
-you can save yourself some work by simply generating the required Python code via xsdata.
-The resulting code will be very detailed, but in most cases it is a good starting point.
+Python code generator from an existing TASKDATA.XML.
 
-see: https://xsdata.readthedocs.io/en/latest/data_binding/pycode_serializing/
+Uses xsdata's PycodeSerializer to emit runnable Python code that reconstructs
+the task data object. Useful as a starting point when adapting a known-good
+export from a real terminal.
+
+See: https://xsdata.readthedocs.io/en/latest/data_binding/pycode_serializing/
+
+Usage:
+    python examples/pycode_generator.py
+    # Output written to examples/output/generated_code.py
 """
+
 from pathlib import Path
 
 from xsdata.formats.dataclass.serializers import PycodeSerializer
 
 from isoxml.io import read_from_path
 
-base_dir = Path(__file__).parent
-path = base_dir.parent / "tests" / "resources"
+BASE_DIR = Path(__file__).parent
+INPUT_PATH = BASE_DIR.parent / "tests" / "resources" / "isoxml" / "v4" / "cnh_export" / "TASKDATA.XML"
+OUTPUT_PATH = BASE_DIR / "output" / "generated_code.py"
 
-task_data = read_from_path(path/ 'isoxml/v4/cnh_export/TASKDATA.XML')
 
-pycode_generator = PycodeSerializer()
-with open(base_dir / 'output' / 'generated_code.py', 'w', encoding='utf-8') as code_file:
-    code_file.write(pycode_generator.render(task_data, var_name="task_data"))
+def main() -> None:
+    task_data, _refs = read_from_path(INPUT_PATH)
+
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
+        f.write(PycodeSerializer().render(task_data, var_name="task_data"))
+    print(f"Generated: {OUTPUT_PATH}")
+
+
+if __name__ == "__main__":
+    main()

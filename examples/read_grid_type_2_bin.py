@@ -1,88 +1,94 @@
 """
-Read an ISOXML Grid Type 2 application map from a TASKDATA directory or zip.
+Read and inspect an ISOXML Grid Type 2 application map.
 
-Outputs:
-- grid metadata from XML
-- decoded numpy array from GRD00000.BIN
-- basic statistics
-- optional CSV export
+Loads TASKDATA from a directory or ZIP, decodes the grid binary, prints
+statistics, and exports the values as CSV.
+
+Usage:
+    python examples/read_grid_type_2_bin.py <source>
+    python examples/read_grid_type_2_bin.py examples/output/example_grid_2/
+    python examples/read_grid_type_2_bin.py examples/output/example_grid_2.zip
 """
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 import numpy as np
 
 from isoxml.grid import decode
-from isoxml.models import DDEntity
 from isoxml.io import read_from_path, read_from_zip
+from isoxml.models import DDEntity
 
 
-def load_isoxml(source: Path):
+def load(source: Path):
     if source.is_dir():
         return read_from_path(source)
     if source.suffix.lower() == ".zip":
         return read_from_zip(source)
-    raise ValueError(f"Unsupported source: {source}")
+    raise ValueError(f"Expected a directory or .zip file, got: {source}")
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Inspect an ISOXML Grid Type 2 binary.")
+    p.add_argument(
+        "source",
+        nargs="?",
+        type=Path,
+        default=Path(__file__).parent / "output" / "example_grid_2.zip",
+        help="TASKDATA directory or ZIP file.",
+    )
+    p.add_argument("--ddi", type=int, default=6, help="DDI for decoding (default: 6).")
+    p.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
+    p.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
+    return p.parse_args()
 
 
 def main() -> None:
-    base_dir = Path(__file__).parent
+    args = parse_args()
+    ddi = DDEntity.from_id(args.ddi)
 
-    # Change this path to your TASKDATA folder or zip file.
-    source = base_dir / "output" / "small_xml_v3_auto"
+    task_data, refs = load(args.source)
 
-    # Change this if the grid uses a different DDI.
-    ddi = DDEntity.from_id(6)
+    if len(task_data.tasks) <= args.task:
+        raise IndexError(f"Task index {args.task} out of range (found {len(task_data.tasks)}).")
+    task = task_data.tasks[args.task]
 
-    task_data, ext_refs = load_isoxml(source)
+    if len(task.grids) <= args.grid:
+        raise IndexError(f"Grid index {args.grid} out of range (found {len(task.grids)}).")
+    grid = task.grids[args.grid]
 
-    if not task_data.tasks:
-        raise ValueError("No task found in TASKDATA.")
-
-    task = task_data.tasks[0]
-    if not task.grids:
-        raise ValueError("No GRD element found in task.")
-
-    grid = task.grids[0]
-    grid_bin = ext_refs.get(grid.filename)
+    grid_bin = refs.get(grid.filename)
     if not isinstance(grid_bin, bytes):
-        raise ValueError(f"Missing binary data for {grid.filename}.bin")
+        raise ValueError(f"No binary data found for {grid.filename}.bin")
 
-    grid_data = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
-    if grid_data.ndim == 3 and grid_data.shape[-1] == 1:
-        grid_data = grid_data[:, :, 0]
+    arr = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
+    if arr.ndim == 3 and arr.shape[-1] == 1:
+        arr = arr[:, :, 0]
 
     print("Grid metadata")
-    print(f"  filename: {grid.filename}.bin")
-    print(f"  type: {grid.type}")
+    print(f"  file:    {grid.filename}.bin")
+    print(f"  type:    {grid.type}")
     print(f"  rows x cols: {grid.maximum_row} x {grid.maximum_column}")
-    print(
-        f"  origin north/east: {grid.minimum_north_position}, {grid.minimum_east_position}"
-    )
-    print(f"  cell north/east: {grid.cell_north_size}, {grid.cell_east_size}")
-    print(f"  DDI: {int(ddi.ddi):04d}")
+    print(f"  origin (north, east): {grid.minimum_north_position}, {grid.minimum_east_position}")
+    print(f"  cell size (north, east): {grid.cell_north_size}, {grid.cell_east_size}")
+    print(f"  DDI: {ddi.ddi:04d} ({ddi.name})")
 
     print("\nDecoded array")
-    print(f"  shape: {grid_data.shape}")
-    print(f"  dtype: {grid_data.dtype}")
-    print(f"  min: {float(np.min(grid_data))}")
-    print(f"  max: {float(np.max(grid_data))}")
-    print(f"  unique values: {np.unique(grid_data).size}")
-    print(f"  non-zero cells: {int(np.count_nonzero(grid_data))}")
-
-    rows_to_show = max(0, grid_data.shape[0])
-    cols_to_show = max(8, grid_data.shape[1])
-    print(f"\nTop-left preview ({rows_to_show} x {cols_to_show})")
-    print(grid_data[:rows_to_show, :cols_to_show])
+    print(f"  shape:        {arr.shape}")
+    print(f"  dtype:        {arr.dtype}")
+    print(f"  min / max:    {float(np.min(arr)):.4f} / {float(np.max(arr)):.4f}")
+    print(f"  unique vals:  {np.unique(arr).size}")
+    print(f"  non-zero:     {int(np.count_nonzero(arr))}")
+    print(f"\nArray preview:\n{arr}")
 
     csv_path = (
-        source / f"{grid.filename}.csv"
-        if source.is_dir()
-        else base_dir / f"{grid.filename}.csv"
+        args.source / f"{grid.filename}.csv"
+        if args.source.is_dir()
+        else args.source.with_name(f"{grid.filename}.csv")
     )
-    np.savetxt(csv_path, grid_data, delimiter=",", fmt="%.6f")
+    np.savetxt(csv_path, arr, delimiter=",", fmt="%.6f")
     print(f"\nCSV written: {csv_path}")
 
 

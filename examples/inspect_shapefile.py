@@ -1,157 +1,95 @@
 """
-Inspect a shapefile to extract information needed for prescription map generation.
+Inspect a shapefile to gather information needed for prescription map generation.
 
-This script will show:
-- CRS (coordinate reference system)
-- Field names and data types
-- Geometry types
-- Data bounds
-- Sample records
-- Value statistics for numeric fields
+Prints CRS, field names/types, spatial bounds, sample records, numeric statistics,
+and auto-detected candidate fields for dose and zone identification.
+
+Usage:
+    python examples/inspect_shapefile.py examples/input/small/shp/Rx.shp
 """
 
+import argparse
 from pathlib import Path
 
 import geopandas as gpd
 
 
-def inspect_shapefile(shp_path: Path) -> None:
-    print(f"📂 Inspecting: {shp_path}\n")
-
-    # Read the shapefile
+def inspect(shp_path: Path) -> None:
     gdf = gpd.read_file(shp_path)
+    print(f"Inspecting: {shp_path}\n")
 
-    # Basic info
-    print("=" * 60)
-    print("📊 BASIC INFORMATION")
-    print("=" * 60)
-    print(f"Total features: {len(gdf)}")
+    print("--- Basic information ---")
+    print(f"Features:       {len(gdf)}")
     print(f"Geometry types: {gdf.geometry.geom_type.unique().tolist()}")
-    print(f"CRS: {gdf.crs}")
-    # add how many polyons that multipolygon has
+    print(f"CRS:            {gdf.crs}")
     if "MultiPolygon" in gdf.geometry.geom_type.unique():
-        multipolygons = gdf[gdf.geometry.geom_type == "MultiPolygon"]
-        print(f"  - MultiPolygons has : {len(multipolygons)} polygons")
+        n = int((gdf.geometry.geom_type == "MultiPolygon").sum())
+        print(f"  MultiPolygons: {n}")
     print()
 
-    # Field information
-    print("=" * 60)
-    print("📋 FIELDS (ATTRIBUTES)")
-    print("=" * 60)
+    print("--- Fields ---")
     for col in gdf.columns:
         if col != "geometry":
-            dtype = gdf[col].dtype
-            print(f"  • {col:20s} ({dtype})")
+            print(f"  {col:20s}  {gdf[col].dtype}")
     print()
 
-    # Spatial bounds
-    print("=" * 60)
-    print("🗺️  SPATIAL BOUNDS")
-    print("=" * 60)
-    bounds = gdf.total_bounds
-    print(f"  Min Lon/East:  {bounds[0]:.8f}")
-    print(f"  Min Lat/North: {bounds[1]:.8f}")
-    print(f"  Max Lon/East:  {bounds[2]:.8f}")
-    print(f"  Max Lat/North: {bounds[3]:.8f}")
+    print("--- Spatial bounds ---")
+    w, s, e, n = gdf.total_bounds
+    print(f"  West / East:   {w:.8f}  /  {e:.8f}")
+    print(f"  South / North: {s:.8f}  /  {n:.8f}")
     print()
 
-    # Sample data
-    print("=" * 60)
-    print("📝 SAMPLE DATA (first 5 rows)")
-    print("=" * 60)
-    # Show without geometry for cleaner output
-    display_df = gdf.drop(columns=["geometry"]).head()
-    print(display_df.to_string())
+    print("--- Sample data (first 5 rows) ---")
+    print(gdf.drop(columns=["geometry"]).head().to_string())
     print()
 
-    # Statistics for numeric fields
-    print("=" * 60)
-    print("📈 NUMERIC FIELD STATISTICS")
-    print("=" * 60)
-    numeric_cols = gdf.select_dtypes(include=["number"]).columns
-    if len(numeric_cols) > 0:
+    numeric_cols = gdf.select_dtypes(include=["number"]).columns.tolist()
+    text_cols = gdf.select_dtypes(include=["object"]).columns.tolist()
+
+    print("--- Numeric field statistics ---")
+    if numeric_cols:
         for col in numeric_cols:
-            print(f"\n  {col}:")
-            print(f"    Min:    {gdf[col].min()}")
-            print(f"    Max:    {gdf[col].max()}")
-            print(f"    Mean:   {gdf[col].mean():.2f}")
-            print(f"    Median: {gdf[col].median():.2f}")
-            unique_count = gdf[col].nunique()
-            print(f"    Unique values: {unique_count}")
-            if unique_count <= 20:
-                print(f"    Values: {sorted(gdf[col].unique().tolist())}")
+            s = gdf[col]
+            unique = s.nunique()
+            print(f"  {col}: min={s.min()}, max={s.max()}, mean={s.mean():.2f}, unique={unique}")
+            if unique <= 20:
+                print(f"    values: {sorted(s.unique().tolist())}")
     else:
         print("  No numeric fields found.")
     print()
 
-    # Check for potential border vs zone indicators
-    print("=" * 60)
-    print("🔍 POTENTIAL FIELD IDENTIFIERS")
-    print("=" * 60)
-    text_cols = gdf.select_dtypes(include=["object"]).columns
-    for col in text_cols:
-        unique_vals = gdf[col].unique()
-        if len(unique_vals) <= 20:
-            print(f"\n  {col}: {unique_vals.tolist()}")
-    print()
+    print("--- Candidate fields for prescription map ---")
+    dose_candidates = [
+        c for c in numeric_cols
+        if any(k in c.lower() for k in ("dose", "rate", "amount", "value", "kg", "fertilizer"))
+    ]
+    print(f"  Dose/value field: {dose_candidates or numeric_cols}")
 
-    # Recommendations
-    print("=" * 60)
-    print("💡 RECOMMENDATIONS FOR PRESCRIPTION MAP")
-    print("=" * 60)
-    print("\nTo generate a prescription map, you need:")
-    print("  1. ✓ Field to identify border polygon (e.g., 'name' == 'border')")
-    print("  2. ✓ Field with dose/application values (numeric)")
-    print("  3. ✓ Polygons for treatment zones")
-    print()
+    zone_candidates = [
+        c for c in text_cols
+        if any(k in c.lower() for k in ("name", "id", "type", "zone", "class"))
+    ]
+    print(f"  Zone/ID field:    {zone_candidates or text_cols}")
 
-    # Try to auto-detect relevant fields
-    print("Auto-detected candidates:")
 
-    # Dose field candidates
-    dose_candidates = []
-    for col in numeric_cols:
-        if any(
-            keyword in col.lower()
-            for keyword in ["dose", "rate", "amount", "value", "kg", "fertilizer"]
-        ):
-            dose_candidates.append(col)
-
-    if dose_candidates:
-        print(f"  • Dose field: {dose_candidates}")
-    else:
-        print(f"  • Dose field: Consider using one of: {list(numeric_cols)}")
-
-    # Name field candidates
-    name_candidates = []
-    for col in text_cols:
-        if any(
-            keyword in col.lower()
-            for keyword in ["name", "id", "type", "zone", "class"]
-        ):
-            name_candidates.append(col)
-
-    if name_candidates:
-        print(f"  • Name/ID field: {name_candidates}")
-    else:
-        print(f"  • Name/ID field: Consider using one of: {list(text_cols)}")
-
-    print()
-    print("=" * 60)
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Inspect a shapefile for prescription map generation.")
+    p.add_argument(
+        "shp_path",
+        nargs="?",
+        type=Path,
+        default=Path(__file__).parent / "input" / "small" / "shp" / "Rx.shp",
+        help="Path to shapefile (.shp).",
+    )
+    return p.parse_args()
 
 
 def main() -> None:
-    # CHANGE THIS PATH to your shapefile
-    shp_path = Path(__file__).parent / "input" / "big" / "shp" / "NDVI_Rx.shp"
-
-    if not shp_path.exists():
-        print(f"❌ File not found: {shp_path}")
-        print(
-            "\n📌 Please update the shp_path in the script to point to your shapefile."
-        )
+    args = parse_args()
+    if not args.shp_path.exists():
+        print(f"File not found: {args.shp_path}")
         return
-
-    inspect_shapefile(shp_path)
+    inspect(args.shp_path)
 
 
 if __name__ == "__main__":

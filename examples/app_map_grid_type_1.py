@@ -1,90 +1,112 @@
 """
-This example shows how to export a grid type 1.
-the grid type 1 functions as a lookup table. the actual values are stored in xml.
-this grid type is particularly interesting if only a few different values need to be stored in the application map.
-If there are many different values, type 2 is preferable, otherwise the XML file becomes very large.
+Grid Type 1 application map example.
+
+Grid Type 1 works as a lookup table: each cell stores a treatment zone code
+(uint8) and the actual dose values live in the XML TreatmentZone elements.
+Best suited for a small number of discrete dose levels (< ~10 unique values).
+For many continuous values, prefer Grid Type 2.
+
+Usage:
+    python examples/app_map_grid_type_1.py
 """
+
+from dataclasses import replace
 from decimal import Decimal
+from pathlib import Path
 
 import numpy as np
 import shapely as shp
-from pathlib import Path
 
 import isoxml.models.base.v3 as iso
-from isoxml.grid import encode_type1
 from isoxml.geometry import ShapelyConverterV3
-from isoxml.models import DDEntity
+from isoxml.grid import encode_type1
 from isoxml.io import write_to_zip
-from dataclasses import replace
+from isoxml.models import DDEntity
 
-y, x = (2, 2)
+BASE_DIR = Path(__file__).parent
+OUTPUT_PATH = BASE_DIR / "output" / "example_grid_1.zip"
 
-base_dir = Path(__file__).parent
-output_path = base_dir / 'output' / 'example_grid_1.zip'
-
-
-shp_converter = ShapelyConverterV3()
-aoi = shp.from_wkt("POLYGON ((15.1461618 48.1269217, 15.1461618 48.1267442, 15.1463363 48.1267442, 15.1463363 48.1269217, 15.1461618 48.1269217))")
-iso_aoi = shp_converter.to_iso_polygon(aoi, iso.PolygonType.PartfieldBoundary)
-customer = iso.Customer(id="CTR100", designator="jr_customer")
-farm = iso.Farm(id="FRM100", designator="jr_farm", customer_id_ref=customer.id)
-partfield = iso.Partfield(
-    id="PFD101", designator="jr_field", area=123456,
-    customer_id_ref=customer.id, farm_id_ref=farm.id,
-    polygons=[iso_aoi]
+ROWS, COLS = 2, 2
+FIELD_WKT = (
+    "POLYGON ((15.1461618 48.1269217, 15.1461618 48.1267442, "
+    "15.1463363 48.1267442, 15.1463363 48.1269217, 15.1461618 48.1269217))"
 )
 
-grid_data = np.arange(y * x, dtype=np.uint8).reshape(y, x)
+DD_ENTITY = DDEntity.from_id(6)  # Actual Volume Content
+converter = ShapelyConverterV3()
 
-grid = iso.Grid(
-    minimum_north_position=Decimal('48.12674'),
-    minimum_east_position=Decimal('15.14615'),
-    cell_north_size=0.0001,
-    cell_east_size=0.0001,
-    maximum_column=x,
-    maximum_row=y,
-    filename="GRD00000",
-    type=iso.GridType.GridType1
-)
-grid_bin = encode_type1(grid_data, grid)
 
-pdv_0 = iso.ProcessDataVariable(
-    process_data_ddi=bytes(DDEntity.from_id(6)),
-    process_data_value=1
-)
-pdv_1 = replace(pdv_0, process_data_value=1000)
-pdv_2 = replace(pdv_0, process_data_value=2000)
-pdv_3 = replace(pdv_0, process_data_value=3000)
+def main() -> None:
+    # --- field geometry ---
+    iso_boundary = converter.to_iso_polygon(
+        shp.from_wkt(FIELD_WKT), iso.PolygonType.PartfieldBoundary
+    )
 
-treatment_0 = iso.TreatmentZone(
-    code=0,
-    designator="zone_0",
-    process_data_variables=[pdv_0]
-)
-treatment_1 = iso.TreatmentZone(code=1, designator="zone_1", process_data_variables=[pdv_1])
-treatment_2 = iso.TreatmentZone(code=2, designator="zone_2", process_data_variables=[pdv_2])
-treatment_3 = iso.TreatmentZone(code=3, designator="zone_3", process_data_variables=[pdv_3])
+    customer = iso.Customer(id="CTR100", designator="jr_customer")
+    farm = iso.Farm(id="FRM100", designator="jr_farm", customer_id_ref=customer.id)
+    partfield = iso.Partfield(
+        id="PFD101",
+        designator="jr_field",
+        area=123456,
+        customer_id_ref=customer.id,
+        farm_id_ref=farm.id,
+        polygons=[iso_boundary],
+    )
 
-task = iso.Task(
-    id="TSK101",
-    designator="task_grid_type_1",
-    status=iso.TaskStatus.Initial,
-    grids=[grid],
-    treatment_zones=[treatment_0, treatment_1, treatment_2, treatment_3],
-    customer_id_ref=customer.id,
-    farm_id_ref=farm.id,
-    partfield_id_ref=partfield.id
-)
+    # --- grid definition ---
+    grid = iso.Grid(
+        minimum_north_position=Decimal("48.12674"),
+        minimum_east_position=Decimal("15.14615"),
+        cell_north_size=0.0001,
+        cell_east_size=0.0001,
+        maximum_column=COLS,
+        maximum_row=ROWS,
+        filename="GRD00000",
+        type=iso.GridType.GridType1,
+    )
 
-task_data = iso.Iso11783TaskData(
-    management_software_manufacturer="josephinum research",
-    management_software_version="0.0.1",
-    data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
-    tasks=[task],
-    customers=[customer],
-    farms=[farm],
-    partfields=[partfield]
-)
+    # Grid data: each cell value is a treatment zone code (0-3)
+    grid_data = np.arange(ROWS * COLS, dtype=np.uint8).reshape(ROWS, COLS)
+    grid_bin = encode_type1(grid_data, grid)
 
-with open(output_path, 'wb') as zip_file:
-    write_to_zip(zip_file, task_data, {grid.filename: grid_bin})
+    # --- treatment zones (one per unique code, values in DDI base unit) ---
+    base_pdv = iso.ProcessDataVariable(
+        process_data_ddi=bytes(DD_ENTITY),
+        process_data_value=0,
+    )
+    treatment_zones = [
+        iso.TreatmentZone(code=0, designator="zone_0", process_data_variables=[replace(base_pdv, process_data_value=0)]),
+        iso.TreatmentZone(code=1, designator="zone_1", process_data_variables=[replace(base_pdv, process_data_value=1000)]),
+        iso.TreatmentZone(code=2, designator="zone_2", process_data_variables=[replace(base_pdv, process_data_value=2000)]),
+        iso.TreatmentZone(code=3, designator="zone_3", process_data_variables=[replace(base_pdv, process_data_value=3000)]),
+    ]
+
+    task = iso.Task(
+        id="TSK101",
+        designator="task_grid_type_1",
+        status=iso.TaskStatus.Initial,
+        grids=[grid],
+        treatment_zones=treatment_zones,
+        customer_id_ref=customer.id,
+        farm_id_ref=farm.id,
+        partfield_id_ref=partfield.id,
+    )
+
+    task_data = iso.Iso11783TaskData(
+        management_software_manufacturer="josephinum research",
+        management_software_version="0.0.1",
+        data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
+        customers=[customer],
+        farms=[farm],
+        partfields=[partfield],
+        tasks=[task],
+    )
+
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(OUTPUT_PATH, "wb") as f:
+        write_to_zip(f, task_data, {grid.filename: grid_bin})
+    print(f"Written: {OUTPUT_PATH}")
+
+
+if __name__ == "__main__":
+    main()

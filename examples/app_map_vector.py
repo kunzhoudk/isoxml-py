@@ -1,12 +1,17 @@
 """
-This example shows how to create a vector based application map.
-This type of map is useful if your application has not many different treatment zones.
-This type of map could also be useful for spot sprayer applications (tests to follow).
-The zones are modelled as TreatmentZones containing the dose and the geometry of the polygon.
+Vector-based application map example.
 
-successful import/display on New Holland T7 + IntelliView 12 + Kverneland iXter B18 (Terminal selection of DDI not possible)
+Creates an ISOXML v4 task where each treatment zone is a polygon with its own
+dose value. Suitable for a small number of clearly defined zones (< ~20).
+
+Tested on: New Holland T7 + IntelliView 12 + Kverneland iXter B18
+Note: terminal cannot select DDI interactively — set it here before export.
+
+Usage:
+    python examples/app_map_vector.py
 """
 
+from importlib import resources
 from pathlib import Path
 
 import geopandas as gpd
@@ -14,93 +19,109 @@ import xmlschema
 
 import isoxml.models.base.v4 as iso
 from isoxml.geometry import ShapelyConverterV4
-from isoxml.models import DDEntity
 from isoxml.io import write_to_dir
+from isoxml.models import DDEntity
 
-shp_converter = ShapelyConverterV4()
-dd_entity = DDEntity.from_id(1)
+BASE_DIR = Path(__file__).parent
+INPUT_PATH = BASE_DIR / "input" / "app_map_vector.geojson"
+OUTPUT_DIR = BASE_DIR / "output" / "app_map_vector"
+
+DD_ENTITY = DDEntity.from_id(1)  # Setpoint Volume Per Area
+converter = ShapelyConverterV4()
 
 
-base_dir = Path(__file__).parent
-read_path = base_dir / 'input' / 'app_map_vector.geojson'
+def load_zones(path: Path) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    gdf = gpd.read_file(path).to_crs("EPSG:4326")
+    border = gdf[gdf["name"] == "border"]
+    zones = gdf[gdf["dose"] >= 0]
+    if len(border) != 1:
+        raise ValueError(f"Expected exactly one 'border' feature, found {len(border)}.")
+    return border, zones
 
-gdf_app_map = gpd.read_file(read_path)
-gdf_app_map.to_crs('EPSG:4326', inplace=True)
-gdf_border = gdf_app_map[gdf_app_map["name"] == "border"]
-gdf_zones = gdf_app_map[gdf_app_map["dose"] >= 0]
 
-assert gdf_border.shape[0] == 1
+def build_partfield(
+    border: gpd.GeoDataFrame,
+    customer: iso.Customer,
+    farm: iso.Farm,
+) -> iso.Partfield:
+    geom = border.geometry.values[0]
+    area_m2 = int(border.to_crs(border.estimate_utm_crs()).area.values[0])
+    return iso.Partfield(
+        id="PFD100",
+        designator=str(border["name"].values[0]),
+        area=area_m2,
+        polygons=[converter.to_iso_polygon(geom, iso.PolygonType.PartfieldBoundary)],
+        customer_id_ref=customer.id,
+        farm_id_ref=farm.id,
+    )
 
-iso_border = shp_converter.to_iso_polygon(shp_polygon=gdf_border.geometry.values[0],
-                                          poly_type=iso.PolygonType.PartfieldBoundary)
 
-customer = iso.Customer(id="CTR100", last_name="jr_customer")
-farm = iso.Farm(id="FRM100", designator="jr_farm", customer_id_ref=customer.id)
-partfield = iso.Partfield(
-    polygons=[iso_border],
-    id="PFD100",
-    designator=gdf_border.name.values[0],
-    area=int(gdf_border.to_crs(gdf_border.estimate_utm_crs()).area.values[0]),
-    customer_id_ref=customer.id,
-    farm_id_ref=farm.id
-)
-
-treatment_zones = []
-default_treatment_zone = iso.TreatmentZone(
-    code=0,
-    designator='no_zone',
-    process_data_variables=[
-        iso.ProcessDataVariable(
-                process_data_ddi=bytes(dd_entity),
-                process_data_value=0
+def build_treatment_zones(zones: gpd.GeoDataFrame) -> list[iso.TreatmentZone]:
+    default = iso.TreatmentZone(
+        code=0,
+        designator="no_zone",
+        process_data_variables=[
+            iso.ProcessDataVariable(
+                process_data_ddi=bytes(DD_ENTITY),
+                process_data_value=0,
             )
-    ]
-)
-treatment_zones.append(default_treatment_zone)
-tz_code = 1
+        ],
+    )
+    result = [default]
+    for code, row in enumerate(zones.itertuples(), start=1):
+        pdv = iso.ProcessDataVariable(
+            process_data_ddi=bytes(DD_ENTITY),
+            process_data_value=int(row.dose / DD_ENTITY.bit_resolution),
+        )
+        result.append(
+            iso.TreatmentZone(
+                code=code,
+                designator=str(row.name),
+                process_data_variables=[pdv],
+                polygons=[converter.to_iso_polygon(row.geometry, iso.PolygonType.TreatmentZone)],
+            )
+        )
+    return result
 
-for zone in gdf_zones.itertuples():
-    pdv = iso.ProcessDataVariable(
-        process_data_ddi=bytes(dd_entity),
-        process_data_value=int(zone.dose / dd_entity.bit_resolution)
+
+def main() -> None:
+    border, zones = load_zones(INPUT_PATH)
+
+    customer = iso.Customer(id="CTR100", last_name="jr_customer")
+    farm = iso.Farm(id="FRM100", designator="jr_farm", customer_id_ref=customer.id)
+    partfield = build_partfield(border, customer, farm)
+    treatment_zones = build_treatment_zones(zones)
+    default_tz = treatment_zones[0]
+
+    task = iso.Task(
+        id="TSK100",
+        designator="vector application map",
+        status=iso.TaskStatus.Planned,
+        partfield_id_ref=partfield.id,
+        treatment_zones=treatment_zones,
+        default_treatment_zone_code=default_tz.code,
+        position_lost_treatment_zone_code=default_tz.code,
+        out_of_field_treatment_zone_code=default_tz.code,
     )
 
-    poly = shp_converter.to_iso_polygon(zone.geometry, iso.PolygonType.TreatmentZone)
-
-    treatment = iso.TreatmentZone(
-        code=tz_code,
-        designator=zone.name,
-        process_data_variables=[pdv],
-        polygons=[poly]
+    task_data = iso.Iso11783TaskData(
+        management_software_manufacturer="josephinum research",
+        management_software_version="0.0.1",
+        data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
+        customers=[customer],
+        farms=[farm],
+        partfields=[partfield],
+        tasks=[task],
     )
-    treatment_zones.append(treatment)
-    tz_code += 1
 
-task = iso.Task(
-    id="TSK100",
-    partfield_id_ref=partfield.id,
-    status=iso.TaskStatus.Planned,
-    treatment_zones=treatment_zones,
-    designator="vector application map",
-    default_treatment_zone_code=default_treatment_zone.code,
-    position_lost_treatment_zone_code=default_treatment_zone.code,
-    out_of_field_treatment_zone_code=default_treatment_zone.code
-)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    write_to_dir(OUTPUT_DIR, task_data)
 
-task_data = iso.Iso11783TaskData(
-    management_software_manufacturer="josephinum research",
-    management_software_version="0.0.1",
-    data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
-    partfields=[partfield],
-    tasks=[task],
-    farms=[farm],
-    customers=[customer]
-)
+    xsd_ref = resources.files("isoxml.data.xsd").joinpath("ISO11783_TaskFile_V4-3.xsd")
+    with resources.as_file(xsd_ref) as xsd_path:
+        xmlschema.validate(OUTPUT_DIR / "TASKDATA.XML", xsd_path)
+    print(f"Written and validated: {OUTPUT_DIR}")
 
-data_dir = base_dir / 'output' / 'app_map_vector'
-data_dir.mkdir(parents=True, exist_ok=True)
-write_to_dir(data_dir, task_data)
 
-path_res = base_dir.parent / 'resources'
-
-xmlschema.validate(data_dir / 'TASKDATA.XML', path_res / "xsd/ISO11783_TaskFile_V4-3.xsd")
+if __name__ == "__main__":
+    main()
