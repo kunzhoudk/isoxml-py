@@ -114,7 +114,7 @@ class Ctr:
             "max_length": 20,
         },
     )
-    l: None | str = field(
+    l: None | str = field(  # noqa: E741
         default=None,
         metadata={
             "name": "L",

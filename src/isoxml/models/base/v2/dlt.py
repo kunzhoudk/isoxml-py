@@ -124,7 +124,7 @@ class Dlt:
             "max_inclusive": 63,
         },
     )
-    l: None | int = field(
+    l: None | int = field(  # noqa: E741
         default=None,
         metadata={
             "name": "L",
