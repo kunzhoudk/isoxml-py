@@ -17,11 +17,11 @@ from pathlib import Path
 
 import isoxml.models.base.v3 as iso
 import isoxml.models.base.v4 as iso4
-from isoxml.util.isoxml_io import isoxml_to_dir, isoxml_to_zip
-from isoxml.workflows.grid_from_shp import (
-    GridFromShpOptions,
-    convert_grid_from_shp,
-    validate_taskdata_xsd,
+from isoxml.io.writer import write_to_dir, write_to_zip
+from isoxml.pipeline.shp_to_grid import (
+    ShpToGridOptions,
+    convert,
+    validate_xsd,
 )
 
 
@@ -146,8 +146,8 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _options_from_args(args: argparse.Namespace) -> GridFromShpOptions:
-    return GridFromShpOptions(
+def _options_from_args(args: argparse.Namespace) -> ShpToGridOptions:
+    return ShpToGridOptions(
         shp_path=args.shp_path,
         value_field=args.value_field,
         ddi=args.ddi,
@@ -168,7 +168,7 @@ def _options_from_args(args: argparse.Namespace) -> GridFromShpOptions:
 def _validate_taskdata_xsd(
     task_data: iso.Iso11783TaskData | iso4.Iso11783TaskData, xml_version: str
 ) -> Path:
-    return validate_taskdata_xsd(task_data, xml_version)
+    return validate_xsd(task_data, xml_version)
 
 
 def build_isoxml_from_shp(
@@ -176,7 +176,7 @@ def build_isoxml_from_shp(
 ) -> tuple[
     iso.Iso11783TaskData | iso4.Iso11783TaskData, dict[str, bytes], str, str, str
 ]:
-    result = convert_grid_from_shp(_options_from_args(args))
+    result = convert(_options_from_args(args))
     return (
         result.task_data,
         result.refs,
@@ -198,12 +198,12 @@ def main() -> None:
 
     output_dir = args.output_dir
     output_dir.mkdir(parents=True, exist_ok=True)
-    isoxml_to_dir(output_dir, task_data, refs)
+    write_to_dir(output_dir, task_data, refs)
 
     if args.output_zip is not None:
         args.output_zip.parent.mkdir(parents=True, exist_ok=True)
         with open(args.output_zip, "wb") as zip_file:
-            isoxml_to_zip(zip_file, task_data, refs)
+            write_to_zip(zip_file, task_data, refs)
 
     grid = task_data.tasks[0].grids[0]
     print("ISOXML conversion complete:")

@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from isoxml.util.isoxml_io import isoxml_from_path
+from isoxml.io.reader import read_from_path as isoxml_from_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_SCRIPT = REPO_ROOT / "examples" / "app_map_grid_type_2_from_shp.py"
