@@ -15,6 +15,10 @@ Geometry conversion (requires shapely ≥ 2.0)::
     from isoxml import ShapelyConverterV3, ShapelyConverterV4
     # or: from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
 
+Version conversion::
+
+    from isoxml import task_data_v3_to_v4
+
 Grid encoding / decoding (requires numpy ≥ 1.26)::
 
     from isoxml import encode, encode_type1, encode_type2, decode
@@ -44,6 +48,9 @@ from isoxml.io import (
 # Geometry converters
 from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
 
+# Version conversion
+from isoxml.convert import task_data_v3_to_v4
+
 # Grid codec
 from isoxml.grid import decode, encode, encode_type1, encode_type2
 
@@ -67,6 +74,8 @@ __all__ = [
     "encode_type1",
     "encode_type2",
     "decode",
+    # Version conversion
+    "task_data_v3_to_v4",
     # Models
     "DDEntity",
 ]
