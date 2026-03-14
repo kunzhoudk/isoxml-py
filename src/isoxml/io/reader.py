@@ -20,6 +20,32 @@ _parser = XmlParser(ParserConfig(
 ))
 
 
+def _resolve_taskdata_dir(task_data_path: Path) -> Path:
+    """Resolve a directory containing ``TASKDATA.XML``.
+
+    Supports either:
+    - a direct ISOXML folder containing ``TASKDATA.XML``
+    - a path to ``TASKDATA.XML`` itself
+    - a parent folder containing exactly one nested ``TASKDATA/TASKDATA.XML``
+    """
+    if task_data_path.is_file():
+        task_data_path = task_data_path.parent
+
+    if (task_data_path / "TASKDATA.XML").exists():
+        return task_data_path
+
+    matches = sorted(task_data_path.rglob("TASKDATA.XML"))
+    if len(matches) == 1:
+        return matches[0].parent
+    if not matches:
+        raise FileNotFoundError(
+            f"TASKDATA.XML not found under '{task_data_path}'."
+        )
+    raise ValueError(
+        f"Expected exactly one TASKDATA.XML under '{task_data_path}', found {len(matches)}."
+    )
+
+
 def _select_version_module(xml_content: str) -> ModuleType:
     """Return the model module (v3 or v4) matching the XML VersionMajor attribute."""
     head = xml_content[:1024]
@@ -54,8 +80,7 @@ def read_from_path(
         ``(task_data, references)`` where *references* maps object IDs to their
         binary payloads (``bytes``) or parsed ``ExternalFileContents`` objects.
     """
-    if task_data_path.is_file():
-        task_data_path = task_data_path.parent
+    task_data_path = _resolve_taskdata_dir(task_data_path)
 
     with open(task_data_path / 'TASKDATA.XML', 'r', encoding='utf-8') as fh:
         xml_content = fh.read()

@@ -92,3 +92,10 @@ def test__read_from_zip__when_valid_archive__expect_parsed_v3():
     task_data, refs = read_from_zip(path)
     assert isinstance(task_data, iso3.Iso11783TaskData)
     assert 'GRD00001' in refs
+
+
+def test__read_from_zip__when_archive_has_taskdata_folder__expect_parsed():
+    path = TEST_RES_DIR / 'isoxml/prescription_converter/small_xml_v3_type_1_auto.zip'
+    task_data, refs = read_from_zip(path)
+    assert isinstance(task_data, iso3.Iso11783TaskData)
+    assert 'GRD00000' in refs

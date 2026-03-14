@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Resolve repository root from this script location, so it works from any cwd.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Editable parameters
 PYTHON_BIN="${REPO_ROOT}/.venv/bin/python"
