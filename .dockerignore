@@ -1,0 +1,26 @@
+.git
+.gitignore
+.ruff_cache
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist/
+build/
+.venv/
+venv/
+*.env
+
+# Tests and docs (not needed in image)
+tests/
+docs/
+examples/
+
+# IDE
+.vscode/
+.idea/
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore

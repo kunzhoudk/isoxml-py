@@ -1,0 +1,10 @@
+services:
+  isoxml:
+    build: .
+    image: isoxml-py
+    # Mount the current directory as /data so CLI tools can read/write files.
+    # Override the default shell command with any isoxml-* CLI tool, e.g.:
+    #   docker compose run --rm isoxml isoxml-validate-taskdata --help
+    volumes:
+      - .:/data
+    working_dir: /data
