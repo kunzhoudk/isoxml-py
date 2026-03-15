@@ -58,7 +58,9 @@ _MAPPINGS: dict[str, list[FieldMapping]] = {
             "colour",
             "colour",
             forward=lambda value: str(value) if isinstance(value, int) else value,
-            backward=lambda value: int(value) if isinstance(value, str) and value.isdigit() else value,
+            backward=lambda value: (
+                int(value) if isinstance(value, str) and value.isdigit() else value
+            ),
         ),
     ],
     "AllocationStamp": [
@@ -72,7 +74,9 @@ _MAPPINGS: dict[str, list[FieldMapping]] = {
 }
 
 
-def get_field_mapping(cls_name: str, target_field_name: str, target_iso) -> FieldMapping | None:
+def get_field_mapping(
+    cls_name: str, target_field_name: str, target_iso
+) -> FieldMapping | None:
     """Return the mapping describing how to populate a target dataclass field."""
     for mapping in _MAPPINGS.get(cls_name, []):
         if mapping.target_field_for_version(target_iso) == target_field_name:

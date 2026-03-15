@@ -13,7 +13,12 @@ from isoxml.io import read_from_path
 from isoxml.pipeline import convert_taskdata_versions
 
 DDI_6 = b"\x00\x06"
-FIXTURE_DIR = Path(__file__).resolve().parents[1] / "resources" / "isoxml" / "taskdata_version_converter"
+FIXTURE_DIR = (
+    Path(__file__).resolve().parents[1]
+    / "resources"
+    / "isoxml"
+    / "taskdata_version_converter"
+)
 FIXTURE_NAMES = [
     "small_xml_v3_type_1_auto.zip",
     "small_xml_v3_type_2_auto.zip",
@@ -39,13 +44,17 @@ def _make_v3_type1_case():
         iso3.TreatmentZone(
             code=1,
             process_data_variables=[
-                iso3.ProcessDataVariable(process_data_ddi=DDI_6, process_data_value=100),
+                iso3.ProcessDataVariable(
+                    process_data_ddi=DDI_6, process_data_value=100
+                ),
             ],
         ),
         iso3.TreatmentZone(
             code=2,
             process_data_variables=[
-                iso3.ProcessDataVariable(process_data_ddi=DDI_6, process_data_value=200),
+                iso3.ProcessDataVariable(
+                    process_data_ddi=DDI_6, process_data_value=200
+                ),
             ],
         ),
     ]
@@ -215,18 +224,25 @@ def test_convert_v4_type2_to_v3_type1():
     grid = task.grids[0]
     zone_codes = np.frombuffer(result.refs[grid.filename], dtype=np.uint8).reshape(2, 2)
     generated_codes = set(np.unique(zone_codes).tolist())
-    generated_zones = [tzn for tzn in task.treatment_zones if tzn.code in generated_codes]
+    generated_zones = [
+        tzn for tzn in task.treatment_zones if tzn.code in generated_codes
+    ]
 
     assert isinstance(result.task_data, iso3.Iso11783TaskData)
     assert grid.type == iso3.GridType.GridType1
     assert grid.filelength == len(result.refs[grid.filename])
     assert generated_codes == {0, 1, 2}
-    assert {tzn.process_data_variables[0].process_data_value for tzn in generated_zones} == {
+    assert {
+        tzn.process_data_variables[0].process_data_value for tzn in generated_zones
+    } == {
         100,
         200,
         300,
     }
-    assert all(tzn.process_data_variables[0].process_data_ddi == DDI_6 for tzn in generated_zones)
+    assert all(
+        tzn.process_data_variables[0].process_data_ddi == DDI_6
+        for tzn in generated_zones
+    )
 
 
 def test_convert_metadata_field_renames_between_versions():
@@ -242,11 +258,19 @@ def test_convert_metadata_field_renames_between_versions():
     assert v4_task_data.customers[0].last_name == "customer"
     assert v4_task_data.workers[0].last_name == "worker"
     assert v4_task_data.devices[0].client_name == b"\x01\x02\x03\x04\x05\x06\x07\x08"
-    assert v4_task_data.tasks[0].device_allocations[0].client_name_value == b"\x11\x12\x13\x14\x15\x16\x17\x18"
-    assert v4_task_data.tasks[0].device_allocations[0].client_name_mask == b"\xff\xff\xff\xff\xff\xff\xff\xff"
+    assert (
+        v4_task_data.tasks[0].device_allocations[0].client_name_value
+        == b"\x11\x12\x13\x14\x15\x16\x17\x18"
+    )
+    assert (
+        v4_task_data.tasks[0].device_allocations[0].client_name_mask
+        == b"\xff\xff\xff\xff\xff\xff\xff\xff"
+    )
     assert v4_task_data.tasks[0].product_allocations[0].quantity_ddi == DDI_6
     assert v4_task_data.tasks[0].product_allocations[0].quantity_value == 123
-    assert len(v4_task_data.tasks[0].device_allocations[0].allocation_stamp.positions) == 1
+    assert (
+        len(v4_task_data.tasks[0].device_allocations[0].allocation_stamp.positions) == 1
+    )
 
     v3_roundtrip = convert_taskdata_versions(
         v4_task_data,
@@ -256,11 +280,20 @@ def test_convert_metadata_field_renames_between_versions():
     ).task_data
     assert v3_roundtrip.customers[0].designator == "customer"
     assert v3_roundtrip.workers[0].designator == "worker"
-    assert v3_roundtrip.devices[0].working_set_master_name == b"\x01\x02\x03\x04\x05\x06\x07\x08"
-    assert v3_roundtrip.tasks[0].device_allocations[0].working_set_master_name_value == b"\x11\x12\x13\x14\x15\x16\x17\x18"
+    assert (
+        v3_roundtrip.devices[0].working_set_master_name
+        == b"\x01\x02\x03\x04\x05\x06\x07\x08"
+    )
+    assert (
+        v3_roundtrip.tasks[0].device_allocations[0].working_set_master_name_value
+        == b"\x11\x12\x13\x14\x15\x16\x17\x18"
+    )
     assert v3_roundtrip.tasks[0].product_allocations[0].amount_ddi == DDI_6
     assert v3_roundtrip.tasks[0].product_allocations[0].amount_value == 123
-    assert v3_roundtrip.tasks[0].device_allocations[0].allocation_stamp.position is not None
+    assert (
+        v3_roundtrip.tasks[0].device_allocations[0].allocation_stamp.position
+        is not None
+    )
 
 
 def _load_zip_fixture(filename: str):
@@ -281,7 +314,9 @@ def _materialize_pdv_values(task_data, refs) -> np.ndarray:
     if int(grid.type.value) == 1:
         zone_codes = np.frombuffer(grid_bin, dtype=np.uint8).reshape(rows, cols)
         zone_map: dict[int, list[int]] = {
-            int(tzn.code): [int(pdv.process_data_value) for pdv in tzn.process_data_variables]
+            int(tzn.code): [
+                int(pdv.process_data_value) for pdv in tzn.process_data_variables
+            ]
             for tzn in task.treatment_zones
             if tzn.code is not None
         }
@@ -305,9 +340,9 @@ def _materialize_pdv_values(task_data, refs) -> np.ndarray:
     [(3, 1), (3, 2), (4, 1), (4, 2)],
 )
 def test_convert_real_zip_fixtures_preserves_taskdata_values(
-        fixture_name: str,
-        target_xml_version: int,
-        target_grid_type: int,
+    fixture_name: str,
+    target_xml_version: int,
+    target_grid_type: int,
 ):
     task_data, refs = _load_zip_fixture(fixture_name)
     expected_values = _materialize_pdv_values(task_data, refs)

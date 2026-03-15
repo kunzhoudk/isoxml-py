@@ -4,21 +4,21 @@ from enum import Enum
 
 
 class PositionStatus(Enum):
-    NoGPSFix = "0",
-    GNSSFix = "1",
-    DGNSSFix = "2",
-    PreciseGNSS = "3",
-    RTKFixedInteger = "4",
-    RTKFloat = "5",
-    EstDRMode = "6",
-    ManualInput = "7",
-    SimulateMode = "8",
-    Reserved9 = "9",
-    Reserved10 = "10",
-    Reserved11 = "11",
-    Reserved12 = "12",
-    Reserved13 = "13",
-    Error = "14",
+    NoGPSFix = ("0",)
+    GNSSFix = ("1",)
+    DGNSSFix = ("2",)
+    PreciseGNSS = ("3",)
+    RTKFixedInteger = ("4",)
+    RTKFloat = ("5",)
+    EstDRMode = ("6",)
+    ManualInput = ("7",)
+    SimulateMode = ("8",)
+    Reserved9 = ("9",)
+    Reserved10 = ("10",)
+    Reserved11 = ("11",)
+    Reserved12 = ("12",)
+    Reserved13 = ("13",)
+    Error = ("14",)
     PositionStatusValueIsNotAvailable = "15"
 
 

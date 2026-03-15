@@ -50,14 +50,18 @@ def write_taskdata_bundle(
 def require_task(task_data: Any, task_index: int) -> Any:
     """Return the requested task or raise a stable index error."""
     if len(task_data.tasks) <= task_index:
-        raise IndexError(f"Task index {task_index} out of range (found {len(task_data.tasks)}).")
+        raise IndexError(
+            f"Task index {task_index} out of range (found {len(task_data.tasks)})."
+        )
     return task_data.tasks[task_index]
 
 
 def require_grid(task: Any, grid_index: int) -> Any:
     """Return the requested grid or raise a stable index error."""
     if len(task.grids) <= grid_index:
-        raise IndexError(f"Grid index {grid_index} out of range (found {len(task.grids)}).")
+        raise IndexError(
+            f"Grid index {grid_index} out of range (found {len(task.grids)})."
+        )
     return task.grids[grid_index]
 
 

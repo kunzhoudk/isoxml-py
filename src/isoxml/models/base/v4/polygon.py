@@ -5,18 +5,18 @@ from isoxml.models.base.v4.line_string import LineString
 
 
 class PolygonType(Enum):
-    PartfieldBoundary = '1'
-    TreatmentZone = '2'
-    WaterSurface = '3'
-    Building = '4'
-    Road = '5'
-    Obstacle = '6'
-    Flag = '7'
-    Other = '8'
-    Mainfield = '9'
-    Headland = '10'
-    BufferZone = '11'
-    Windbreak = '12'
+    PartfieldBoundary = "1"
+    TreatmentZone = "2"
+    WaterSurface = "3"
+    Building = "4"
+    Road = "5"
+    Obstacle = "6"
+    Flag = "7"
+    Other = "8"
+    Mainfield = "9"
+    Headland = "10"
+    BufferZone = "11"
+    Windbreak = "12"
 
 
 @dataclass

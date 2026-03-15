@@ -20,12 +20,12 @@ class _ShapelyConverter:
     # ------------------------------------------------------------------
 
     def _make_iso_point(
-            self,
-            lon: float,
-            lat: float,
-            alt: float | None = None,
-            pnt_type=None,
-            **kwargs,
+        self,
+        lon: float,
+        lat: float,
+        alt: float | None = None,
+        pnt_type=None,
+        **kwargs,
     ):
         if pnt_type is None:
             pnt_type = self._iso.PointType.Other
@@ -136,7 +136,9 @@ class _ShapelyConverter:
     # Multi-geometry helpers
     # ------------------------------------------------------------------
 
-    def to_iso_point_list(self, multi_point: shp.MultiPoint, pnt_type=None, **kwargs) -> list:
+    def to_iso_point_list(
+        self, multi_point: shp.MultiPoint, pnt_type=None, **kwargs
+    ) -> list:
         """Convert a Shapely ``MultiPoint`` to a list of ISOXML ``Point`` objects."""
         if pnt_type is None:
             pnt_type = self._iso.PointType.Other
@@ -147,17 +149,21 @@ class _ShapelyConverter:
         return shp.MultiPoint([self.to_shapely_point(p) for p in iso_points])
 
     def to_iso_line_string_list(
-            self, multi_line: shp.MultiLineString, lsg_type, **kwargs
+        self, multi_line: shp.MultiLineString, lsg_type, **kwargs
     ) -> list:
         """Convert a Shapely ``MultiLineString`` to a list of ISOXML ``LineString`` objects."""
-        return [self.to_iso_line_string(ls, lsg_type, **kwargs) for ls in multi_line.geoms]
+        return [
+            self.to_iso_line_string(ls, lsg_type, **kwargs) for ls in multi_line.geoms
+        ]
 
     def to_shapely_multi_line_string(self, iso_lines: list) -> shp.MultiLineString:
         """Convert a list of ISOXML ``LineString`` objects to a Shapely ``MultiLineString``."""
-        return shp.MultiLineString([self.to_shapely_line_string(ls) for ls in iso_lines])
+        return shp.MultiLineString(
+            [self.to_shapely_line_string(ls) for ls in iso_lines]
+        )
 
     def to_iso_polygon_list(
-            self, multi_polygon: shp.MultiPolygon, pln_type=None, **kwargs
+        self, multi_polygon: shp.MultiPolygon, pln_type=None, **kwargs
     ) -> list:
         """Convert a Shapely ``MultiPolygon`` to a list of ISOXML ``Polygon`` objects."""
         if pln_type is None:

@@ -9,5 +9,7 @@ serializer = XmlSerializer()
 
 
 def test_parsing():
-    task_data = parser.parse(TEST_RES_DIR / "isoxml" / "v4" / "full_task" /"TASKDATA.XML", Iso11783TaskData)
+    task_data = parser.parse(
+        TEST_RES_DIR / "isoxml" / "v4" / "full_task" / "TASKDATA.XML", Iso11783TaskData
+    )
     assert isinstance(task_data, Iso11783TaskData)

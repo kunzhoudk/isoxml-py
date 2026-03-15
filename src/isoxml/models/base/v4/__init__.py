@@ -23,35 +23,60 @@ from isoxml.models.base.v4.device_process_data import DeviceProcessData
 from isoxml.models.base.v4.device_property import DeviceProperty
 from isoxml.models.base.v4.device_value_presentation import DeviceValuePresentation
 from isoxml.models.base.v4.external_file_contents import ExternalFileContents
-from isoxml.models.base.v4.external_file_reference import ExternalFileReference, ExternalFileReferenceType
+from isoxml.models.base.v4.external_file_reference import (
+    ExternalFileReference,
+    ExternalFileReferenceType,
+)
 from isoxml.models.base.v4.farm import Farm
 from isoxml.models.base.v4.grid import Grid, GridType
 from isoxml.models.base.v4.guidance_allocation import GuidanceAllocation
 from isoxml.models.base.v4.guidance_group import GuidanceGroup
-from isoxml.models.base.v4.guidance_pattern import GuidancePattern, GuidancePatternType, GuidancePatternOptions, \
-    GuidancePatternPropagationDirection, GuidancePatternExtension, GuidancePatternGNSSMethod
+from isoxml.models.base.v4.guidance_pattern import (
+    GuidancePattern,
+    GuidancePatternType,
+    GuidancePatternOptions,
+    GuidancePatternPropagationDirection,
+    GuidancePatternExtension,
+    GuidancePatternGNSSMethod,
+)
 from isoxml.models.base.v4.guidance_shift import GuidanceShift
-from isoxml.models.base.v4.iso11783_link_list import Iso11783LinkList, Iso11783LinkListDataTransferOrigin, \
-    Iso11783LinkListVersionMajor, Iso11783LinkListVersionMinor
-from isoxml.models.base.v4.iso11783_task_data import Iso11783TaskData, Iso11783TaskDataDataTransferOrigin, \
-    Iso11783TaskDataVersionMajor, Iso11783TaskDataVersionMinor
+from isoxml.models.base.v4.iso11783_link_list import (
+    Iso11783LinkList,
+    Iso11783LinkListDataTransferOrigin,
+    Iso11783LinkListVersionMajor,
+    Iso11783LinkListVersionMinor,
+)
+from isoxml.models.base.v4.iso11783_task_data import (
+    Iso11783TaskData,
+    Iso11783TaskDataDataTransferOrigin,
+    Iso11783TaskDataVersionMajor,
+    Iso11783TaskDataVersionMinor,
+)
 from isoxml.models.base.v4.line_string import LineString, LineStringType
 from isoxml.models.base.v4.link import Link
 from isoxml.models.base.v4.link_group import LinkGroup, LinkGroupB
 from isoxml.models.base.v4.oper_tech_practice import OperTechPractice
 from isoxml.models.base.v4.operation_technique import OperationTechnique
-from isoxml.models.base.v4.operation_technique_reference import OperationTechniqueReference
+from isoxml.models.base.v4.operation_technique_reference import (
+    OperationTechniqueReference,
+)
 from isoxml.models.base.v4.partfield import Partfield
 from isoxml.models.base.v4.point import Point, PointType
 from isoxml.models.base.v4.polygon import Polygon, PolygonType
 from isoxml.models.base.v4.position import Position, PositionStatus
 from isoxml.models.base.v4.process_data_variable import ProcessDataVariable
 from isoxml.models.base.v4.product import Product, ProductF
-from isoxml.models.base.v4.product_allocation import ProductAllocation, ProductAllocationTransferMode
+from isoxml.models.base.v4.product_allocation import (
+    ProductAllocation,
+    ProductAllocationTransferMode,
+)
 from isoxml.models.base.v4.product_group import ProductGroup, ProductGroupType
 from isoxml.models.base.v4.product_relation import ProductRelation
 from isoxml.models.base.v4.task import Task, TaskStatus
-from isoxml.models.base.v4.task_controller_capabilities import TaskControllerCapabilities, TaskControllerCapabilitiesC
+from isoxml.models.base.v4.task_controller_capabilities import (
+    TaskControllerCapabilities,
+    TaskControllerCapabilitiesC,
+)
 from isoxml.models.base.v4.time import Time, TimeType
 from isoxml.models.base.v4.time_log import TimeLog, TimeLogType
 from isoxml.models.base.v4.treatment_zone import TreatmentZone

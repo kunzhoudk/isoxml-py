@@ -19,7 +19,9 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_cli_run__when_test_shp_input__expect_geojson_with_embedded_boundary(tmp_path: Path):
+def test_cli_run__when_test_shp_input__expect_geojson_with_embedded_boundary(
+    tmp_path: Path,
+):
     output_path = tmp_path / "application_map.geojson"
 
     proc = _run_cli(

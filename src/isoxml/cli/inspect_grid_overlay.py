@@ -31,7 +31,9 @@ def load(source: Path):
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Overlay ISOXML grid on partfield boundary.")
+    parser = argparse.ArgumentParser(
+        description="Overlay ISOXML grid on partfield boundary."
+    )
     parser.add_argument("source", type=Path, help="TASKDATA directory or ZIP.")
     parser.add_argument(
         "--task",
@@ -49,8 +51,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=0,
         help="Grid index within task (default: 0).",
     )
-    parser.add_argument("--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6).")
-    parser.add_argument("--show-zero", action="store_true", help="Include zero-value cells in plot.")
+    parser.add_argument(
+        "--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6)."
+    )
+    parser.add_argument(
+        "--show-zero", action="store_true", help="Include zero-value cells in plot."
+    )
     parser.add_argument(
         "--vector-path",
         "--shp",
@@ -60,8 +66,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Optional vector file to overlay.",
     )
     parser.add_argument("--out", type=Path, default=None, help="Output PNG path.")
-    parser.add_argument("--cells-out", type=Path, default=None, help="Output GeoJSON for grid cells.")
+    parser.add_argument(
+        "--cells-out", type=Path, default=None, help="Output GeoJSON for grid cells."
+    )
     return parser.parse_args(argv)
+
 
 def _converter(task_data):
     if getattr(task_data.version_major, "value", None) == "4":
@@ -74,16 +83,24 @@ def _partfield_geometry(task_data, task) -> shp.Geometry | None:
         return None
     conv = _converter(task_data)
     partfield = next(
-        (partfield for partfield in task_data.partfields if partfield.id == task.partfield_id_ref),
+        (
+            partfield
+            for partfield in task_data.partfields
+            if partfield.id == task.partfield_id_ref
+        ),
         task_data.partfields[0],
     )
     if not partfield or not partfield.polygons:
         return None
-    return shp.unary_union([conv.to_shapely_polygon(poly) for poly in partfield.polygons])
+    return shp.unary_union(
+        [conv.to_shapely_polygon(poly) for poly in partfield.polygons]
+    )
 
 
 def _type1_code_to_value(task_data, task) -> dict[int, float]:
-    vpn_by_id = {vpn.id: vpn for vpn in getattr(task_data, "value_presentations", []) if vpn.id}
+    vpn_by_id = {
+        vpn.id: vpn for vpn in getattr(task_data, "value_presentations", []) if vpn.id
+    }
     result: dict[int, float] = {}
     for treatment_zone in task.treatment_zones:
         if treatment_zone.code is None:
@@ -107,7 +124,9 @@ def _decode_values(task_data, task, grid, grid_bin: bytes, ddi: DDEntity) -> np.
     if is_type1:
         raw = decode(grid_bin, grid, scale=False)
         code_map = _type1_code_to_value(task_data, task)
-        return np.vectorize(lambda code: code_map.get(int(code), 0.0))(raw).astype(np.float32)
+        return np.vectorize(lambda code: code_map.get(int(code), 0.0))(raw).astype(
+            np.float32
+        )
     arr = decode(grid_bin, grid, ddi_list=[ddi], scale=True)
     if arr.ndim == 3 and arr.shape[-1] == 1:
         arr = arr[:, :, 0]
@@ -143,7 +162,9 @@ def _cells_geodataframe(grid, values: np.ndarray, show_zero: bool) -> gpd.GeoDat
     )
 
 
-def _alignment_metrics(grid_bbox: shp.Polygon, partfield: shp.Geometry) -> dict[str, float] | None:
+def _alignment_metrics(
+    grid_bbox: shp.Polygon, partfield: shp.Geometry
+) -> dict[str, float] | None:
     if partfield is None or partfield.is_empty:
         return None
     utm = gpd.GeoSeries([partfield], crs="EPSG:4326").estimate_utm_crs()
@@ -206,7 +227,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     fig.savefig(out_png, dpi=180, bbox_inches="tight")
     plt.close(fig)
 
-    out_geojson = args.cells_out or default_sidecar_path(args.source, "grid_cells.geojson")
+    out_geojson = args.cells_out or default_sidecar_path(
+        args.source, "grid_cells.geojson"
+    )
     out_geojson.parent.mkdir(parents=True, exist_ok=True)
     with open(out_geojson, "w", encoding="utf-8") as file_handle:
         file_handle.write(cells_gdf.to_json(drop_id=True))
@@ -214,8 +237,10 @@ def main(argv: Sequence[str] | None = None) -> None:
     grid_bbox = shp.box(
         float(grid.minimum_east_position),
         float(grid.minimum_north_position),
-        float(grid.minimum_east_position) + float(grid.cell_east_size) * int(grid.maximum_column),
-        float(grid.minimum_north_position) + float(grid.cell_north_size) * int(grid.maximum_row),
+        float(grid.minimum_east_position)
+        + float(grid.cell_east_size) * int(grid.maximum_column),
+        float(grid.minimum_north_position)
+        + float(grid.cell_north_size) * int(grid.maximum_row),
     )
     metrics = _alignment_metrics(grid_bbox, partfield_geom)
 

@@ -7,8 +7,8 @@ from isoxml.models.base.v4.position import Position
 
 
 class AllocationStampType(Enum):
-    Planned = '1'
-    EffectiveRealized = '4'
+    Planned = "1"
+    EffectiveRealized = "4"
 
 
 @dataclass

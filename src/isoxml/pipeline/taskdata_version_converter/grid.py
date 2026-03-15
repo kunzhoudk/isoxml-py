@@ -6,7 +6,13 @@ from typing import Any
 
 import numpy as np
 
-from isoxml.pipeline.taskdata_version_converter.types import _Grid, _PDV, _Task, _TaskData, _TZN
+from isoxml.pipeline.taskdata_version_converter.types import (
+    _Grid,
+    _PDV,
+    _Task,
+    _TaskData,
+    _TZN,
+)
 
 
 def normalize_grid_type(target_grid_type: int | str) -> int:
@@ -30,9 +36,7 @@ def convert_task_grids(
 
     for task in task_data.tasks:
         used_zone_codes = {
-            int(tzn.code)
-            for tzn in task.treatment_zones
-            if tzn.code is not None
+            int(tzn.code) for tzn in task.treatment_zones if tzn.code is not None
         }
 
         for grid in task.grids:
@@ -65,7 +69,9 @@ def convert_task_grids(
                 used_zone_codes,
             )
             task.treatment_zones.extend(new_tzns)
-            used_zone_codes.update(int(tzn.code) for tzn in new_tzns if tzn.code is not None)
+            used_zone_codes.update(
+                int(tzn.code) for tzn in new_tzns if tzn.code is not None
+            )
             grid.type = target_grid_enum
             grid.treatment_zone_code = None
             grid.filelength = len(new_bin)
@@ -110,7 +116,9 @@ def _convert_type1_bin_to_type2(grid_bin: bytes, grid: _Grid, task: _Task) -> by
 
     missing_codes = set(np.unique(codes).tolist()) - set(zone_map)
     if missing_codes:
-        raise ValueError(f"Grid uses unknown TreatmentZone code(s): {sorted(missing_codes)}.")
+        raise ValueError(
+            f"Grid uses unknown TreatmentZone code(s): {sorted(missing_codes)}."
+        )
 
     lookup = np.zeros((256, pdv_count), dtype=np.int32)
     for code, values in zone_map.items():
@@ -149,13 +157,15 @@ def _convert_type2_bin_to_type1(
         )
 
     pdv_templates = _pdv_templates(task, grid, pdv_count)
-    assigned_codes = np.array(available_codes[:len(unique_values)], dtype=np.uint8)
+    assigned_codes = np.array(available_codes[: len(unique_values)], dtype=np.uint8)
 
     TZNCls = target_iso.TreatmentZone
     PDVCls = target_iso.ProcessDataVariable
     new_tzns: list[_TZN] = []
 
-    for zone_code, value_row in zip(assigned_codes.tolist(), unique_values.tolist(), strict=True):
+    for zone_code, value_row in zip(
+        assigned_codes.tolist(), unique_values.tolist(), strict=True
+    ):
         pdvs: list[_PDV] = []
         for idx, raw_value in enumerate(value_row):
             template = pdv_templates[idx]
@@ -190,7 +200,9 @@ def _pdv_templates(task: _Task, grid: _Grid, pdv_count: int) -> list[dict[str, A
     if template_zone is None:
         template_zone = next(
             (
-                tzn for tzn in task.treatment_zones if len(tzn.process_data_variables) == pdv_count
+                tzn
+                for tzn in task.treatment_zones
+                if len(tzn.process_data_variables) == pdv_count
             ),
             None,
         )

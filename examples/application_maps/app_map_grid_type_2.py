@@ -87,7 +87,7 @@ def main() -> None:
     )
 
     task_data = iso.Iso11783TaskData(
-        management_software_manufacturer="josephinum research",
+        management_software_manufacturer="test_manufacturer",
         management_software_version="0.0.1",
         data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
         customers=[customer],

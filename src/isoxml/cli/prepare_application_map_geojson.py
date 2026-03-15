@@ -34,18 +34,35 @@ def build_application_map_geojson(
 
     if name_field is not None:
         if name_field not in gdf.columns:
-            raise ValueError(f"Field '{name_field}' does not exist in the vector input.")
+            raise ValueError(
+                f"Field '{name_field}' does not exist in the vector input."
+            )
         gdf["name"] = gdf[name_field].astype(str)
     else:
         gdf["name"] = [f"zone{i}" for i in range(1, len(gdf) + 1)]
 
-    gdf = gdf[[*([c for c in gdf.columns if c != "geometry" and c not in {"name", "dose"}]), "name", "dose", "geometry"]]
+    gdf = gdf[
+        [
+            *(
+                [
+                    c
+                    for c in gdf.columns
+                    if c != "geometry" and c not in {"name", "dose"}
+                ]
+            ),
+            "name",
+            "dose",
+            "geometry",
+        ]
+    ]
 
     boundary_row = {col: None for col in gdf.columns if col != "geometry"}
     boundary_row["name"] = boundary_name
     boundary_row["dose"] = None
     boundary_geom = shp.unary_union(gdf.geometry.values)
-    boundary_gdf = gpd.GeoDataFrame([boundary_row], geometry=[boundary_geom], crs=gdf.crs)
+    boundary_gdf = gpd.GeoDataFrame(
+        [boundary_row], geometry=[boundary_geom], crs=gdf.crs
+    )
 
     output_gdf = pd.concat([gdf, boundary_gdf], ignore_index=True)
     output_path.parent.mkdir(parents=True, exist_ok=True)

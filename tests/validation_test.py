@@ -5,7 +5,12 @@ from zipfile import ZipFile
 from isoxml.io import read_from_path
 from isoxml.xsd_validation import validate_xsd
 
-FIXTURE_DIR = Path(__file__).resolve().parent / "resources" / "isoxml" / "taskdata_version_converter"
+FIXTURE_DIR = (
+    Path(__file__).resolve().parent
+    / "resources"
+    / "isoxml"
+    / "taskdata_version_converter"
+)
 
 
 def test_validate_xsd_infers_version_from_task_data():

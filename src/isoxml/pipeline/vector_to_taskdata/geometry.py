@@ -56,7 +56,9 @@ def iter_polygons(geom):
 def ensure_polygon_gdf(gdf: "gpd.GeoDataFrame") -> "gpd.GeoDataFrame":
     gdf = gdf[gdf.geometry.notna()].copy()
     gdf["geometry"] = gdf.geometry.apply(shp.make_valid)
-    gdf["geometry"] = [shp.unary_union(list(iter_polygons(g))) or None for g in gdf.geometry]
+    gdf["geometry"] = [
+        shp.unary_union(list(iter_polygons(g))) or None for g in gdf.geometry
+    ]
     gdf = gdf[gdf.geometry.notna() & ~gdf.geometry.is_empty].copy()
     if gdf.empty:
         raise ValueError("No polygon geometry found in the vector input.")
@@ -66,7 +68,9 @@ def ensure_polygon_gdf(gdf: "gpd.GeoDataFrame") -> "gpd.GeoDataFrame":
 def _normalize_boundary_label(value: object) -> str | None:
     if value is None:
         return None
-    token = str(value).strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+    token = (
+        str(value).strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+    )
     return token or None
 
 
@@ -87,7 +91,9 @@ def split_embedded_boundary(
             app_gdf = gdf.loc[~mask].copy()
             boundary_gdf = gdf.loc[mask].copy()
             if app_gdf.empty:
-                raise ValueError("Embedded boundary detection left no application-map features.")
+                raise ValueError(
+                    "Embedded boundary detection left no application-map features."
+                )
             return app_gdf, boundary_gdf
 
     if requested_value_field and requested_value_field in gdf.columns:
@@ -96,7 +102,9 @@ def split_embedded_boundary(
             app_gdf = gdf.loc[~mask].copy()
             boundary_gdf = gdf.loc[mask].copy()
             if app_gdf.empty:
-                raise ValueError("Embedded boundary detection left no application-map features.")
+                raise ValueError(
+                    "Embedded boundary detection left no application-map features."
+                )
             return app_gdf, boundary_gdf
 
     raise ValueError(

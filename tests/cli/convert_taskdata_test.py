@@ -7,7 +7,9 @@ from pathlib import Path
 from isoxml.io import read_from_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FIXTURE_DIR = REPO_ROOT / "tests" / "resources" / "isoxml" / "taskdata_version_converter"
+FIXTURE_DIR = (
+    REPO_ROOT / "tests" / "resources" / "isoxml" / "taskdata_version_converter"
+)
 
 
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:

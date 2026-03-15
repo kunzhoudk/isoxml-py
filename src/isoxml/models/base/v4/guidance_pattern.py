@@ -7,45 +7,45 @@ from isoxml.models.base.v4.polygon import Polygon
 
 
 class GuidancePatternType(Enum):
-    AB = '1'
-    APlus = '2'
-    Curve = '3'
-    Pivot = '4'
-    Spiral = '5'
+    AB = "1"
+    APlus = "2"
+    Curve = "3"
+    Pivot = "4"
+    Spiral = "5"
 
 
 class GuidancePatternOptions(Enum):
-    ClockwiseForPivot = '1'
-    CounterClockwiseForPivot = '2'
-    FullCircleForPivot = '3'
+    ClockwiseForPivot = "1"
+    CounterClockwiseForPivot = "2"
+    FullCircleForPivot = "3"
 
 
 class GuidancePatternPropagationDirection(Enum):
-    BothDirections = '1'
-    LeftDirectionOnly = '2'
-    RightDirectionOnly = '3'
-    NoPropagation = '4'
+    BothDirections = "1"
+    LeftDirectionOnly = "2"
+    RightDirectionOnly = "3"
+    NoPropagation = "4"
 
 
 class GuidancePatternExtension(Enum):
-    FromBothFirstAndLastPoint = '1'
-    FromFirstPointAOnly = '2'
-    FromLastPointBOnly = '3'
-    NoExtensions = '4'
+    FromBothFirstAndLastPoint = "1"
+    FromFirstPointAOnly = "2"
+    FromLastPointBOnly = "3"
+    NoExtensions = "4"
 
 
 class GuidancePatternGNSSMethod(Enum):
-    NoGPSFix = '0'
-    GNSSFix = '1'
-    DGNSSFix = '2'
-    PreciseGNSS = '3'
-    RTKFixedInteger = '4'
-    RTKFloat = '5'
-    EstDRMode = '6'
-    ManualInput = '7'
-    SimulateMode = '8'
-    DesktopGeneratedData = '16'
-    Other = '17'
+    NoGPSFix = "0"
+    GNSSFix = "1"
+    DGNSSFix = "2"
+    PreciseGNSS = "3"
+    RTKFixedInteger = "4"
+    RTKFloat = "5"
+    EstDRMode = "6"
+    ManualInput = "7"
+    SimulateMode = "8"
+    DesktopGeneratedData = "16"
+    Other = "17"
 
 
 @dataclass

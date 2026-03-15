@@ -60,7 +60,10 @@ def inspect(source_path: Path) -> None:
     dose_candidates = [
         col
         for col in numeric_cols
-        if any(key in col.lower() for key in ("dose", "rate", "amount", "value", "kg", "fertilizer"))
+        if any(
+            key in col.lower()
+            for key in ("dose", "rate", "amount", "value", "kg", "fertilizer")
+        )
     ]
     print(f"  Dose/value field: {dose_candidates or numeric_cols}")
 
@@ -73,8 +76,17 @@ def inspect(source_path: Path) -> None:
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    default_path = Path(__file__).resolve().parents[3] / "examples" / "input" / "small" / "shp" / "Rx.shp"
-    parser = argparse.ArgumentParser(description="Inspect a vector file for application-map generation.")
+    default_path = (
+        Path(__file__).resolve().parents[3]
+        / "examples"
+        / "input"
+        / "small"
+        / "shp"
+        / "Rx.shp"
+    )
+    parser = argparse.ArgumentParser(
+        description="Inspect a vector file for application-map generation."
+    )
     parser.add_argument(
         "source_path",
         nargs="?",

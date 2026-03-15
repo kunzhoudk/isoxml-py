@@ -17,8 +17,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("source", type=Path, help="Input ISOXML folder or ZIP archive.")
     parser.add_argument("--target-xml-version", required=True, choices=["3", "4"])
     parser.add_argument("--target-grid-type", required=True, choices=["1", "2"])
-    parser.add_argument("--output-dir", type=Path, help="Write converted files to a directory.")
-    parser.add_argument("--output-zip", type=Path, help="Write converted files to a ZIP archive.")
+    parser.add_argument(
+        "--output-dir", type=Path, help="Write converted files to a directory."
+    )
+    parser.add_argument(
+        "--output-zip", type=Path, help="Write converted files to a ZIP archive."
+    )
     parser.add_argument(
         "--skip-xsd-validation",
         action="store_true",

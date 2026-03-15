@@ -21,7 +21,12 @@ from isoxml.models import DDEntity
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    default_path = Path(__file__).resolve().parents[3] / "examples" / "output" / "example_grid_2.zip"
+    default_path = (
+        Path(__file__).resolve().parents[3]
+        / "examples"
+        / "output"
+        / "example_grid_2.zip"
+    )
     parser = argparse.ArgumentParser(description="Inspect an ISOXML grid binary.")
     parser.add_argument(
         "source",
@@ -30,9 +35,13 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=default_path,
         help="TASKDATA directory or ZIP file.",
     )
-    parser.add_argument("--ddi", type=int, default=6, help="DDI for decoding (default: 6).")
+    parser.add_argument(
+        "--ddi", type=int, default=6, help="DDI for decoding (default: 6)."
+    )
     parser.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
-    parser.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
+    parser.add_argument(
+        "--grid", type=int, default=0, help="Grid index within task (default: 0)."
+    )
     return parser.parse_args(argv)
 
 
@@ -60,7 +69,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     print(f"  file:    {grid.filename}.bin")
     print(f"  type:    {grid.type}")
     print(f"  rows x cols: {grid.maximum_row} x {grid.maximum_column}")
-    print(f"  origin (north, east): {grid.minimum_north_position}, {grid.minimum_east_position}")
+    print(
+        f"  origin (north, east): {grid.minimum_north_position}, {grid.minimum_east_position}"
+    )
     print(f"  cell size (north, east): {grid.cell_north_size}, {grid.cell_east_size}")
     if is_type1:
         print("  mode: zone codes (Grid Type 1)")

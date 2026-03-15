@@ -4,8 +4,9 @@ from enum import Enum
 
 
 class GridType(Enum):
-    GridType1 = '1'
-    GridType2 = '2'
+    GridType1 = "1"
+    GridType2 = "2"
+
 
 @dataclass
 class Grid:
@@ -135,6 +136,3 @@ class Grid:
             "max_inclusive": 254,
         },
     )
-
-
-

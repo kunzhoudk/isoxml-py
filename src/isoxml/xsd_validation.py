@@ -52,7 +52,9 @@ def normalize_xml_version(xml_version: int | str) -> str:
     try:
         get_version_module(version)
     except ValueError as exc:
-        raise ValueError(f"Unsupported XML version for XSD validation: {xml_version!r}") from exc
+        raise ValueError(
+            f"Unsupported XML version for XSD validation: {xml_version!r}"
+        ) from exc
     return version
 
 

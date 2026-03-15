@@ -15,14 +15,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _options(
-        source_path: Path,
-        boundary_path: Path | None,
-        *,
-        boundary_mask: str = "touch",
-        grid_extent: str = "boundary",
-        grid_type: str = "1",
-        value_unit: str = "kg/ha",
-        cell_size_m: float = 3.0,
+    source_path: Path,
+    boundary_path: Path | None,
+    *,
+    boundary_mask: str = "touch",
+    grid_extent: str = "boundary",
+    grid_type: str = "1",
+    value_unit: str = "kg/ha",
+    cell_size_m: float = 3.0,
 ) -> VectorToTaskDataOptions:
     return VectorToTaskDataOptions(
         source_path=source_path,
@@ -61,16 +61,20 @@ def _non_zero_mask(grid_bin: bytes, grid) -> np.ndarray:
 
 def _boundary_union(task_data) -> shp.Geometry:
     conv = ShapelyConverterV3()
-    return shp.unary_union([conv.to_shapely_polygon(p) for p in task_data.partfields[0].polygons])
+    return shp.unary_union(
+        [conv.to_shapely_polygon(p) for p in task_data.partfields[0].polygons]
+    )
 
 
 def test_touch__non_zero_cells_intersect_boundary():
-    result = convert(_options(
-        REPO_ROOT / "examples/input/big/shp/Rx.shp",
-        REPO_ROOT / "examples/input/big/boundary/Boundary.shp",
-        boundary_mask="touch",
-        grid_extent="boundary",
-    ))
+    result = convert(
+        _options(
+            REPO_ROOT / "examples/input/big/shp/Rx.shp",
+            REPO_ROOT / "examples/input/big/boundary/Boundary.shp",
+            boundary_mask="touch",
+            grid_extent="boundary",
+        )
+    )
     grid = result.task_data.tasks[0].grids[0]
     grid_bin = result.refs[grid.filename]
     non_zero = _non_zero_mask(grid_bin, grid)
@@ -81,12 +85,14 @@ def test_touch__non_zero_cells_intersect_boundary():
 
 
 def test_strict__non_zero_cells_fully_inside_boundary():
-    result = convert(_options(
-        REPO_ROOT / "examples/input/small/shp/Rx.shp",
-        REPO_ROOT / "examples/input/small/boundary/Boundary.shp",
-        boundary_mask="strict",
-        grid_extent="boundary",
-    ))
+    result = convert(
+        _options(
+            REPO_ROOT / "examples/input/small/shp/Rx.shp",
+            REPO_ROOT / "examples/input/small/boundary/Boundary.shp",
+            boundary_mask="strict",
+            grid_extent="boundary",
+        )
+    )
     grid = result.task_data.tasks[0].grids[0]
     grid_bin = result.refs[grid.filename]
     non_zero = _non_zero_mask(grid_bin, grid)
@@ -98,12 +104,14 @@ def test_strict__non_zero_cells_fully_inside_boundary():
 
 def test_grid_extent_boundary__grid_bbox_matches_boundary_bbox():
     boundary_path = REPO_ROOT / "examples/input/big/boundary/Boundary.shp"
-    result = convert(_options(
-        REPO_ROOT / "examples/input/big/shp/Rx.shp",
-        boundary_path,
-        boundary_mask="touch",
-        grid_extent="boundary",
-    ))
+    result = convert(
+        _options(
+            REPO_ROOT / "examples/input/big/shp/Rx.shp",
+            boundary_path,
+            boundary_mask="touch",
+            grid_extent="boundary",
+        )
+    )
     grid = result.task_data.tasks[0].grids[0]
     b_gdf = gpd.read_file(boundary_path).to_crs("EPSG:4326")
     b_minx, b_miny, b_maxx, b_maxy = b_gdf.total_bounds
@@ -121,14 +129,20 @@ def test_auto_and_explicit_units__expected_scaling():
     source_path = REPO_ROOT / "examples/input/small/shp/Rx.shp"
     boundary_path = REPO_ROOT / "examples/input/small/boundary/Boundary.shp"
 
-    auto_result = convert(_options(source_path, boundary_path, value_unit="auto", grid_type="1"))
+    auto_result = convert(
+        _options(source_path, boundary_path, value_unit="auto", grid_type="1")
+    )
     assert auto_result.effective_unit == "kg/ha"
     assert auto_result.unit_source == "vector:unit"
     assert auto_result.task_data.tasks[0].grids[0].type == iso3.GridType.GridType1
     assert "GRD00000" in auto_result.refs
 
-    kg_result = convert(_options(source_path, boundary_path, value_unit="kg/ha", grid_type="2"))
-    ddi_result = convert(_options(source_path, boundary_path, value_unit="ddi", grid_type="2"))
+    kg_result = convert(
+        _options(source_path, boundary_path, value_unit="kg/ha", grid_type="2")
+    )
+    ddi_result = convert(
+        _options(source_path, boundary_path, value_unit="ddi", grid_type="2")
+    )
 
     kg_grid = kg_result.task_data.tasks[0].grids[0]
     ddi_grid = ddi_result.task_data.tasks[0].grids[0]
@@ -142,22 +156,25 @@ def test_auto_and_explicit_units__expected_scaling():
 
 
 def test_geojson_embedded_boundary__string_numeric_value_field_is_accepted():
-    result = convert(VectorToTaskDataOptions(
-        source_path=REPO_ROOT / "examples/input/test_shp_application_map_with_boundary.geojson",
-        boundary_path=None,
-        value_field="dose",
-        ddi=6,
-        value_unit="kg/ha",
-        grid_type="1",
-        xml_version="4",
-        cell_size_m=3.0,
-        boundary_mask="touch",
-        grid_extent="boundary",
-        input_crs=None,
-        partfield_name=None,
-        software_manufacturer="isoxml-py",
-        software_version="0.1.0",
-    ))
+    result = convert(
+        VectorToTaskDataOptions(
+            source_path=REPO_ROOT
+            / "examples/input/test_shp_application_map_with_boundary.geojson",
+            boundary_path=None,
+            value_field="dose",
+            ddi=6,
+            value_unit="kg/ha",
+            grid_type="1",
+            xml_version="4",
+            cell_size_m=3.0,
+            boundary_mask="touch",
+            grid_extent="boundary",
+            input_crs=None,
+            partfield_name=None,
+            software_manufacturer="isoxml-py",
+            software_version="0.1.0",
+        )
+    )
 
     grid = result.task_data.tasks[0].grids[0]
     assert result.value_field == "dose"

@@ -17,12 +17,12 @@ from isoxml.models.base.v4.worker_allocation import WorkerAllocation
 
 
 class TaskStatus(Enum):
-    Planned = '1'
-    Running = '2'
-    Paused = '3'
-    Completed = '4'
-    Template = '5'
-    Canceled = '6'
+    Planned = "1"
+    Running = "2"
+    Paused = "3"
+    Completed = "4"
+    Template = "5"
+    Canceled = "6"
 
 
 @dataclass

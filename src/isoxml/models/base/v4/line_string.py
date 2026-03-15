@@ -5,15 +5,15 @@ from isoxml.models.base.v4.point import Point
 
 
 class LineStringType(Enum):
-    PolygonExterior = '1'
-    PolygonInterior = '2'
-    TramLine = '3'
-    SamplingRoute = '4'
-    GuidancePattern = '5'
-    Drainage = '6'
-    Fence = '7'
-    Flag = '8'
-    Obstacle = '9'
+    PolygonExterior = "1"
+    PolygonInterior = "2"
+    TramLine = "3"
+    SamplingRoute = "4"
+    GuidancePattern = "5"
+    Drainage = "6"
+    Fence = "7"
+    Flag = "8"
+    Obstacle = "9"
 
 
 @dataclass

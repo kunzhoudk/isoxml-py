@@ -26,7 +26,9 @@ def test_cli_help__when_invoked__expect_expected_arguments_visible():
     assert "--value-unit" in proc.stdout
 
 
-def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(tmp_path: Path):
+def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(
+    tmp_path: Path,
+):
     output_dir = tmp_path / "taskdata"
     output_zip = tmp_path / "taskdata.zip"
 

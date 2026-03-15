@@ -66,10 +66,26 @@ def main() -> None:
         process_data_value=0,
     )
     treatment_zones = [
-        iso.TreatmentZone(code=0, designator="zone_0", process_data_variables=[replace(base_pdv, process_data_value=0)]),
-        iso.TreatmentZone(code=1, designator="zone_1", process_data_variables=[replace(base_pdv, process_data_value=1000)]),
-        iso.TreatmentZone(code=2, designator="zone_2", process_data_variables=[replace(base_pdv, process_data_value=2000)]),
-        iso.TreatmentZone(code=3, designator="zone_3", process_data_variables=[replace(base_pdv, process_data_value=3000)]),
+        iso.TreatmentZone(
+            code=0,
+            designator="zone_0",
+            process_data_variables=[replace(base_pdv, process_data_value=0)],
+        ),
+        iso.TreatmentZone(
+            code=1,
+            designator="zone_1",
+            process_data_variables=[replace(base_pdv, process_data_value=1000)],
+        ),
+        iso.TreatmentZone(
+            code=2,
+            designator="zone_2",
+            process_data_variables=[replace(base_pdv, process_data_value=2000)],
+        ),
+        iso.TreatmentZone(
+            code=3,
+            designator="zone_3",
+            process_data_variables=[replace(base_pdv, process_data_value=3000)],
+        ),
     ]
 
     task = iso.Task(
@@ -84,7 +100,7 @@ def main() -> None:
     )
 
     task_data = iso.Iso11783TaskData(
-        management_software_manufacturer="josephinum research",
+        management_software_manufacturer="test_manufacturer",
         management_software_version="0.0.1",
         data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
         customers=[customer],

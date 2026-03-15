@@ -7,9 +7,9 @@ from isoxml.models.base import v3 as iso3, v4 as iso4
 
 
 def merge_ext_content(
-        task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData,
-        ext_content_map: dict[str, iso3.ExternalFileContents | iso4.ExternalFileContents],
-        inplace: bool = False,
+    task_data: iso3.Iso11783TaskData | iso4.Iso11783TaskData,
+    ext_content_map: dict[str, iso3.ExternalFileContents | iso4.ExternalFileContents],
+    inplace: bool = False,
 ) -> tuple[iso3.Iso11783TaskData | iso4.Iso11783TaskData, dict[str, object]]:
     """Merge parsed external-file objects back into the main *task_data* tree.
 
@@ -35,8 +35,8 @@ def merge_ext_content(
     # Build a lookup: XML element name → dataclass field name on task_data.
     element_to_field: dict[str, str] = {}
     for field_meta in fields(_task_data):
-        if 'name' in field_meta.metadata:
-            element_to_field[field_meta.metadata['name']] = field_meta.name
+        if "name" in field_meta.metadata:
+            element_to_field[field_meta.metadata["name"]] = field_meta.name
 
     for ext_ref in _task_data.external_file_references:
         ref_obj = _ext_map.pop(ext_ref.filename)

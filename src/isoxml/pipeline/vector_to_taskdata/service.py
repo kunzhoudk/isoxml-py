@@ -12,7 +12,10 @@ from isoxml.pipeline.vector_to_taskdata.geometry import (
     resolve_value_field,
     split_embedded_boundary,
 )
-from isoxml.pipeline.vector_to_taskdata.inputs import load_vector_gdf, resolve_value_unit
+from isoxml.pipeline.vector_to_taskdata.inputs import (
+    load_vector_gdf,
+    resolve_value_unit,
+)
 from isoxml.pipeline.vector_to_taskdata.taskdata import build_result
 from isoxml.pipeline.vector_to_taskdata.types import (
     VectorToTaskDataOptions,
@@ -40,7 +43,9 @@ def convert(options: VectorToTaskDataOptions) -> VectorToTaskDataResult:
         )
 
     value_field = resolve_value_field(gdf, options.value_field)
-    effective_unit, unit_source = resolve_value_unit(gdf, options.value_unit, value_field)
+    effective_unit, unit_source = resolve_value_unit(
+        gdf, options.value_unit, value_field
+    )
 
     gdf_wgs84 = gdf.to_crs("EPSG:4326")
     gdf_boundary_wgs84 = gdf_boundary.to_crs("EPSG:4326")

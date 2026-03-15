@@ -127,7 +127,9 @@ def test_convert_task_grids_rejects_type1_with_unknown_zone_code():
             iso3.TreatmentZone(
                 code=1,
                 process_data_variables=[
-                    iso3.ProcessDataVariable(process_data_ddi=DDI_6, process_data_value=100)
+                    iso3.ProcessDataVariable(
+                        process_data_ddi=DDI_6, process_data_value=100
+                    )
                 ],
             )
         ],
@@ -154,14 +156,20 @@ def test_convert_task_grids_rejects_type1_with_inconsistent_pdv_counts():
             iso3.TreatmentZone(
                 code=1,
                 process_data_variables=[
-                    iso3.ProcessDataVariable(process_data_ddi=DDI_6, process_data_value=100)
+                    iso3.ProcessDataVariable(
+                        process_data_ddi=DDI_6, process_data_value=100
+                    )
                 ],
             ),
             iso3.TreatmentZone(
                 code=2,
                 process_data_variables=[
-                    iso3.ProcessDataVariable(process_data_ddi=DDI_6, process_data_value=200),
-                    iso3.ProcessDataVariable(process_data_ddi=DDI_6, process_data_value=300),
+                    iso3.ProcessDataVariable(
+                        process_data_ddi=DDI_6, process_data_value=200
+                    ),
+                    iso3.ProcessDataVariable(
+                        process_data_ddi=DDI_6, process_data_value=300
+                    ),
                 ],
             ),
         ],
@@ -208,5 +216,10 @@ def test_convert_task_grids_type2_to_type1_uses_null_templates_when_no_zone_matc
 
     assert task.grids[0].type == iso4.GridType.GridType1
     assert produced_codes == {0, 1}
-    assert all(tzn.process_data_variables[0].process_data_ddi is None for tzn in produced_zones)
-    assert all(tzn.process_data_variables[0].value_presentation_id_ref is None for tzn in produced_zones)
+    assert all(
+        tzn.process_data_variables[0].process_data_ddi is None for tzn in produced_zones
+    )
+    assert all(
+        tzn.process_data_variables[0].value_presentation_id_ref is None
+        for tzn in produced_zones
+    )

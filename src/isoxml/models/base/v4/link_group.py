@@ -5,10 +5,10 @@ from isoxml.models.base.v4.link import Link
 
 
 class LinkGroupB(Enum):
-    UUIDs = '1'
-    ManufacturerProprietary = '2'
-    UniqueResolvableURIs = '3'
-    InformationalResolvableURIs = '4'
+    UUIDs = "1"
+    ManufacturerProprietary = "2"
+    UniqueResolvableURIs = "3"
+    InformationalResolvableURIs = "4"
 
 
 @dataclass

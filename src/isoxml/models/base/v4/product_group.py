@@ -6,6 +6,7 @@ class ProductGroupType(Enum):
     ProductGroup = "1"
     CropType = "2"
 
+
 @dataclass
 class ProductGroup:
     """
@@ -49,6 +50,3 @@ class ProductGroup:
             "type": "Attribute",
         },
     )
-
-
-

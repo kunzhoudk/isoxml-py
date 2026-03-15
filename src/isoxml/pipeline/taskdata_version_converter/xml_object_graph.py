@@ -14,7 +14,9 @@ def resolve_target_module(target_xml_version: int | str):
     try:
         return get_version_module(target_xml_version)
     except ValueError as exc:
-        raise ValueError(f"Unsupported target XML version: {target_xml_version!r}") from exc
+        raise ValueError(
+            f"Unsupported target XML version: {target_xml_version!r}"
+        ) from exc
 
 
 def convert_tree(value: Any, target_iso) -> Any:
@@ -54,8 +56,7 @@ def _convert_value(
         return None
     if isinstance(value, list):
         converted_items = [
-            _convert_value(item, target_iso, classes, enums)
-            for item in value
+            _convert_value(item, target_iso, classes, enums) for item in value
         ]
         return [item for item in converted_items if item is not None]
     if isinstance(value, Enum):

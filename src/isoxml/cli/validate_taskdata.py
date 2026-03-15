@@ -11,8 +11,12 @@ from isoxml.xsd_validation import validate_xsd
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate ISOXML TaskData against the bundled XSD.")
-    parser.add_argument("source", type=Path, help="TASKDATA directory, XML file, or ZIP archive.")
+    parser = argparse.ArgumentParser(
+        description="Validate ISOXML TaskData against the bundled XSD."
+    )
+    parser.add_argument(
+        "source", type=Path, help="TASKDATA directory, XML file, or ZIP archive."
+    )
     parser.add_argument(
         "--xml-version",
         choices=["3", "4"],
@@ -20,6 +24,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Override the XML version used for XSD selection.",
     )
     return parser.parse_args(argv)
+
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)

@@ -17,7 +17,9 @@ from isoxml.models.base.v4.partfield import Partfield
 from isoxml.models.base.v4.product import Product
 from isoxml.models.base.v4.product_group import ProductGroup
 from isoxml.models.base.v4.task import Task
-from isoxml.models.base.v4.task_controller_capabilities import TaskControllerCapabilities
+from isoxml.models.base.v4.task_controller_capabilities import (
+    TaskControllerCapabilities,
+)
 from isoxml.models.base.v4.value_presentation import ValuePresentation
 from isoxml.models.base.v4.worker import Worker
 

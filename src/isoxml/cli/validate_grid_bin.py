@@ -16,11 +16,17 @@ from isoxml.models import DDEntity
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate ISOXML grid binary consistency.")
+    parser = argparse.ArgumentParser(
+        description="Validate ISOXML grid binary consistency."
+    )
     parser.add_argument("source", type=Path, help="TASKDATA directory or ZIP.")
     parser.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
-    parser.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
-    parser.add_argument("--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6).")
+    parser.add_argument(
+        "--grid", type=int, default=0, help="Grid index within task (default: 0)."
+    )
+    parser.add_argument(
+        "--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6)."
+    )
     parser.add_argument(
         "--vector-path",
         "--shp",
@@ -29,8 +35,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default=None,
         help="Source vector file for value comparison.",
     )
-    parser.add_argument("--value-field", type=str, default=None, help="Numeric field name in shapefile.")
+    parser.add_argument(
+        "--value-field", type=str, default=None, help="Numeric field name in shapefile."
+    )
     return parser.parse_args(argv)
+
 
 def _expected_byte_length(grid, ddi_count: int = 1) -> int:
     cells = int(grid.maximum_row) * int(grid.maximum_column)
@@ -62,7 +71,9 @@ def _check_type2(task, arr: np.ndarray, ddi: DDEntity) -> None:
     print(f"  min / max: {float(np.min(arr)):.4f} / {float(np.max(arr)):.4f}")
     print(f"  unique values: {np.unique(arr).size}")
     if task.treatment_zones:
-        print(f"  note: {len(task.treatment_zones)} TZN entries (values are in .bin, not TZN)")
+        print(
+            f"  note: {len(task.treatment_zones)} TZN entries (values are in .bin, not TZN)"
+        )
 
 
 def _compare_vector_file(source_path: Path, value_field: str, arr: np.ndarray) -> None:
@@ -79,7 +90,9 @@ def _compare_vector_file(source_path: Path, value_field: str, arr: np.ndarray) -
     grid_nonzero = grid_vals[grid_vals != 0]
     shp_nonzero = shp_vals[shp_vals != 0]
 
-    missing = [value for value in shp_nonzero if value not in set(grid_nonzero.tolist())]
+    missing = [
+        value for value in shp_nonzero if value not in set(grid_nonzero.tolist())
+    ]
     extra = [value for value in grid_nonzero if value not in set(shp_vals.tolist())]
 
     print("Vector-file comparison")
@@ -130,18 +143,24 @@ def main(argv: Sequence[str] | None = None) -> None:
         raw = decode(grid_bin, grid, scale=False)
         _check_type1(task, raw)
         code_to_val = {
-            int(treatment_zone.code): float(treatment_zone.process_data_variables[0].process_data_value or 0)
+            int(treatment_zone.code): float(
+                treatment_zone.process_data_variables[0].process_data_value or 0
+            )
             for treatment_zone in task.treatment_zones
             if treatment_zone.code is not None and treatment_zone.process_data_variables
         }
-        arr_for_compare = np.vectorize(lambda code: code_to_val.get(int(code), np.nan))(raw)
+        arr_for_compare = np.vectorize(lambda code: code_to_val.get(int(code), np.nan))(
+            raw
+        )
     else:
         _check_type2(task, arr, ddi)
         arr_for_compare = arr[:, :, 0] if arr.ndim == 3 and arr.shape[-1] == 1 else arr
 
     if args.vector_path is not None:
         if args.value_field is None:
-            raise ValueError("--value-field is required when --vector-path is provided.")
+            raise ValueError(
+                "--value-field is required when --vector-path is provided."
+            )
         _compare_vector_file(args.vector_path, args.value_field, arr_for_compare)
 
 

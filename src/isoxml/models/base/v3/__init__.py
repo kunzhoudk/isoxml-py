@@ -23,15 +23,20 @@ from isoxml.models.base.v3.external_file_contents import ExternalFileContents
 from isoxml.models.base.v3.farm import Farm
 from isoxml.models.base.v3.grid import Grid, GridType
 from isoxml.models.base.v3.iso11783_task_data import (
-    Iso11783TaskData, Iso11783TaskDataVersionMajor,
-    Iso11783TaskDataVersionMinor, Iso11783TaskDataDataTransferOrigin
+    Iso11783TaskData,
+    Iso11783TaskDataVersionMajor,
+    Iso11783TaskDataVersionMinor,
+    Iso11783TaskDataDataTransferOrigin,
 )
 from isoxml.models.base.v3.line_string import LineString, LineStringType
 from isoxml.models.base.v3.oper_tech_practice import OperTechPractice
 from isoxml.models.base.v3.operation_technique import OperationTechnique
-from isoxml.models.base.v3.operation_technique_reference import OperationTechniqueReference
+from isoxml.models.base.v3.operation_technique_reference import (
+    OperationTechniqueReference,
+)
 from isoxml.models.base.v3.product_allocation import (
-    ProductAllocation, ProductAllocationTransferMode
+    ProductAllocation,
+    ProductAllocationTransferMode,
 )
 from isoxml.models.base.v3.product import Product
 from isoxml.models.base.v3.process_data_variable import ProcessDataVariable
@@ -48,7 +53,8 @@ from isoxml.models.base.v3.value_presentation import ValuePresentation
 from isoxml.models.base.v3.worker_allocation import WorkerAllocation
 from isoxml.models.base.v3.worker import Worker
 from isoxml.models.base.v3.external_file_reference import (
-    ExternalFileReference, ExternalFileReferenceType
+    ExternalFileReference,
+    ExternalFileReferenceType,
 )
 
 __all__ = [

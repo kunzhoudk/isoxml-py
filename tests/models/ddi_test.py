@@ -19,11 +19,11 @@ def test__from_id__when_unknown__expect_key_error():
 
 def test__to_bytes__when_valid__expect_big_endian():
     entry = DDEntity.from_id(60)
-    assert bytes(entry) == b'\x00\x3c'
+    assert bytes(entry) == b"\x00\x3c"
 
 
 def test__from_bytes__when_valid__expect_correct_ddi():
-    entry = DDEntity.from_bytes(b'\x00\x3c')
+    entry = DDEntity.from_bytes(b"\x00\x3c")
     assert entry.ddi == 60
 
 

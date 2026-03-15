@@ -114,7 +114,9 @@ def build_result(
     partfield = iso_mod.Partfield(
         id="PFD100",
         designator=infer_partfield_name(
-            gdf_boundary_wgs84, options.boundary_path or options.source_path, options.partfield_name
+            gdf_boundary_wgs84,
+            options.boundary_path or options.source_path,
+            options.partfield_name,
         ),
         area=int(round(boundary_metric.area)),
         customer_id_ref=customer.id,
@@ -135,7 +137,8 @@ def build_result(
     )
 
     grid_type = (
-        iso_mod.GridType.GridType1 if options.grid_type == "1"
+        iso_mod.GridType.GridType1
+        if options.grid_type == "1"
         else iso_mod.GridType.GridType2
     )
     treatment_zones = [default_tz]
@@ -186,7 +189,9 @@ def build_result(
     if grid_type == iso_mod.GridType.GridType1:
         grid_bin = encode_type1(grid_codes, grid)
     else:
-        grid_bin = encode_type2(scaled_grid_values, grid, ddi_list=[dd_entity], scale=True)
+        grid_bin = encode_type2(
+            scaled_grid_values, grid, ddi_list=[dd_entity], scale=True
+        )
 
     task = iso_mod.Task(
         id="TSK100",

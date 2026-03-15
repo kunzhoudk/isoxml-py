@@ -6,7 +6,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FIXTURE_DIR = REPO_ROOT / "tests" / "resources" / "isoxml" / "taskdata_version_converter"
+FIXTURE_DIR = (
+    REPO_ROOT / "tests" / "resources" / "isoxml" / "taskdata_version_converter"
+)
 
 
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
@@ -19,7 +21,9 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_inspect_grid_cli_run__when_type2_fixture__expect_stats_and_csv_output(tmp_path: Path):
+def test_inspect_grid_cli_run__when_type2_fixture__expect_stats_and_csv_output(
+    tmp_path: Path,
+):
     source_zip = tmp_path / "small_xml_v3_type_2_auto.zip"
     shutil.copy2(FIXTURE_DIR / "small_xml_v3_type_2_auto.zip", source_zip)
 

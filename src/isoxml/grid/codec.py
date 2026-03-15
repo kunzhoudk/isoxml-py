@@ -15,11 +15,12 @@ def _grid_shape(grid: iso3.Grid | iso4.Grid) -> tuple[int, int]:
 # Encoding: NumPy → binary bytes
 # ---------------------------------------------------------------------------
 
+
 def encode(
-        arr: np.ndarray,
-        grid: iso3.Grid | iso4.Grid,
-        ddi_list: list[DDEntity] | None = None,
-        scale: bool = True,
+    arr: np.ndarray,
+    grid: iso3.Grid | iso4.Grid,
+    ddi_list: list[DDEntity] | None = None,
+    scale: bool = True,
 ) -> bytes:
     """Convert a NumPy array to the binary format required by the given *grid*.
 
@@ -49,22 +50,20 @@ def encode_type1(arr: np.ndarray, grid: iso3.Grid | iso4.Grid) -> bytes:
         Row-major (C-order) byte sequence.
     """
     if arr.dtype != np.uint8:
-        raise ValueError(
-            f"Grid Type 1 requires dtype uint8; got {arr.dtype!r}."
-        )
+        raise ValueError(f"Grid Type 1 requires dtype uint8; got {arr.dtype!r}.")
     expected = _grid_shape(grid)
     if arr.shape != expected:
         raise ValueError(
             f"Array shape {arr.shape} does not match grid shape {expected}."
         )
-    return arr.tobytes(order='C')
+    return arr.tobytes(order="C")
 
 
 def encode_type2(
-        arr: np.ndarray,
-        grid: iso3.Grid | iso4.Grid,
-        ddi_list: list[DDEntity] | None = None,
-        scale: bool = True,
+    arr: np.ndarray,
+    grid: iso3.Grid | iso4.Grid,
+    ddi_list: list[DDEntity] | None = None,
+    scale: bool = True,
 ) -> bytes:
     """Encode an int32-compatible array as a Grid Type 2 binary payload.
 
@@ -94,24 +93,25 @@ def encode_type2(
     if scale and ddi_list:
         factors = [int(1 / ddi.bit_resolution) for ddi in ddi_list]
         arr = np.round(arr * factors, decimals=0)
-        arr_int32 = arr.astype(dtype=np.int32, order='C', casting='unsafe', copy=True)
+        arr_int32 = arr.astype(dtype=np.int32, order="C", casting="unsafe", copy=True)
     else:
         try:
-            arr_int32 = arr.astype(dtype=np.int32, order='C', casting='safe', copy=True)
+            arr_int32 = arr.astype(dtype=np.int32, order="C", casting="safe", copy=True)
         except (TypeError, ValueError) as exc:
             raise ValueError("Cannot safely cast array to int32.") from exc
-    return arr_int32.tobytes(order='C')
+    return arr_int32.tobytes(order="C")
 
 
 # ---------------------------------------------------------------------------
 # Decoding: binary bytes → NumPy
 # ---------------------------------------------------------------------------
 
+
 def decode(
-        grid_bin: bytes,
-        grid: iso3.Grid | iso4.Grid,
-        ddi_list: list[DDEntity] | None = None,
-        scale: bool = True,
+    grid_bin: bytes,
+    grid: iso3.Grid | iso4.Grid,
+    ddi_list: list[DDEntity] | None = None,
+    scale: bool = True,
 ) -> np.ndarray:
     """Convert a binary grid payload back to a NumPy array.
 

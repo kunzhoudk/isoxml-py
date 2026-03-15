@@ -5,9 +5,9 @@ from isoxml.models.base.v4.coded_comment_list_value import CodedCommentListValue
 
 
 class CodedCommentScope(Enum):
-    Point = '1'
-    Global = '2'
-    Continuous = '3'
+    Point = "1"
+    Global = "2"
+    Continuous = "3"
 
 
 @dataclass

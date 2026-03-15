@@ -23,8 +23,9 @@ def v4():
 # Point
 # ---------------------------------------------------------------------------
 
+
 def test_v3_to_iso_point(v3):
-    y, x = Decimal('-89.9'), Decimal('179.55')
+    y, x = Decimal("-89.9"), Decimal("179.55")
     iso_pt = v3.to_iso_point(shp.Point(x, y))
     assert isinstance(iso_pt, iso3.Point)
     assert iso_pt.north == y
@@ -61,6 +62,7 @@ def test_v4_to_shapely_point(v4):
 # LineString
 # ---------------------------------------------------------------------------
 
+
 def test_v3_linestring_roundtrip(v3):
     ls = shp.LineString([[0, 0], [1, 0], [1, 1]])
     iso_ls = v3.to_iso_line_string(ls, iso3.LineStringType.Drainage)
@@ -83,9 +85,15 @@ def test_v3_linestring_implicit_closing(v3):
 
 
 def test_v4_linestring_single_point(v4):
-    iso_ls = iso4.LineString(points=[
-        iso4.Point(type=iso4.PointType.GuidanceReferenceA, north=Decimal(0), east=Decimal(0)),
-    ])
+    iso_ls = iso4.LineString(
+        points=[
+            iso4.Point(
+                type=iso4.PointType.GuidanceReferenceA,
+                north=Decimal(0),
+                east=Decimal(0),
+            ),
+        ]
+    )
     shp_ls = v4.to_shapely_line_string(iso_ls)
     assert len(shp_ls.coords) == 2
     assert not shp.is_valid(shp_ls)
@@ -94,6 +102,7 @@ def test_v4_linestring_single_point(v4):
 # ---------------------------------------------------------------------------
 # Polygon
 # ---------------------------------------------------------------------------
+
 
 def test_v3_polygon_roundtrip(v3):
     poly = shp.Polygon(
@@ -128,10 +137,18 @@ def test_v4_polygon_implicit_shell(v4):
             iso4.LineString(
                 type=iso4.LineStringType.Flag,
                 points=[
-                    iso4.Point(type=iso4.PointType.Flag, north=Decimal(0), east=Decimal(0)),
-                    iso4.Point(type=iso4.PointType.Flag, north=Decimal(0), east=Decimal(1)),
-                    iso4.Point(type=iso4.PointType.Flag, north=Decimal(1), east=Decimal(1)),
-                    iso4.Point(type=iso4.PointType.Flag, north=Decimal(0), east=Decimal(0)),
+                    iso4.Point(
+                        type=iso4.PointType.Flag, north=Decimal(0), east=Decimal(0)
+                    ),
+                    iso4.Point(
+                        type=iso4.PointType.Flag, north=Decimal(0), east=Decimal(1)
+                    ),
+                    iso4.Point(
+                        type=iso4.PointType.Flag, north=Decimal(1), east=Decimal(1)
+                    ),
+                    iso4.Point(
+                        type=iso4.PointType.Flag, north=Decimal(0), east=Decimal(0)
+                    ),
                 ],
             )
         ],
@@ -146,10 +163,18 @@ def test__to_shapely_polygon__when_shell_missing__expect_error(v3):
             iso3.LineString(
                 type=iso3.LineStringType.PolygonInterior,
                 points=[
-                    iso3.Point(type=iso3.PointType.Other, north=Decimal(0), east=Decimal(0)),
-                    iso3.Point(type=iso3.PointType.Other, north=Decimal(0), east=Decimal(1)),
-                    iso3.Point(type=iso3.PointType.Other, north=Decimal(1), east=Decimal(0)),
-                    iso3.Point(type=iso3.PointType.Other, north=Decimal(0), east=Decimal(0)),
+                    iso3.Point(
+                        type=iso3.PointType.Other, north=Decimal(0), east=Decimal(0)
+                    ),
+                    iso3.Point(
+                        type=iso3.PointType.Other, north=Decimal(0), east=Decimal(1)
+                    ),
+                    iso3.Point(
+                        type=iso3.PointType.Other, north=Decimal(1), east=Decimal(0)
+                    ),
+                    iso3.Point(
+                        type=iso3.PointType.Other, north=Decimal(0), east=Decimal(0)
+                    ),
                 ],
             )
         ],
@@ -174,12 +199,15 @@ def test__to_shapely_polygon__when_multiple_exterior_rings__expect_not_implement
         ],
     )
     with pytest.raises(NotImplementedError):
-        v3.to_shapely_polygon(iso3.Polygon(type=iso3.PolygonType.Other, line_strings=[shell_a, shell_b]))
+        v3.to_shapely_polygon(
+            iso3.Polygon(type=iso3.PolygonType.Other, line_strings=[shell_a, shell_b])
+        )
 
 
 # ---------------------------------------------------------------------------
 # Multi-geometry
 # ---------------------------------------------------------------------------
+
 
 def test_v3_multipoint_roundtrip(v3):
     mp = shp.MultiPoint([[0.0, 0.0], [1.0, 2.0]])
@@ -196,10 +224,14 @@ def test_v3_multilinestring_roundtrip(v3):
 
 
 def test_v3_multipolygon_roundtrip(v3):
-    mp = shp.MultiPolygon([
-        (((0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)),
-         [((0.1, 0.1), (0.1, 0.2), (0.2, 0.2), (0.2, 0.1))])
-    ])
+    mp = shp.MultiPolygon(
+        [
+            (
+                ((0.0, 0.0), (0.0, 1.0), (1.0, 1.0), (1.0, 0.0)),
+                [((0.1, 0.1), (0.1, 0.2), (0.2, 0.2), (0.2, 0.1))],
+            )
+        ]
+    )
     iso_polys = v3.to_iso_polygon_list(mp)
     assert isinstance(iso_polys[0], iso3.Polygon)
     assert v3.to_shapely_multi_polygon(iso_polys).equals(mp)
@@ -209,17 +241,21 @@ def test_v3_multipolygon_roundtrip(v3):
 # to_shapely_geom dispatch
 # ---------------------------------------------------------------------------
 
+
 def test__to_shapely_geom__when_v4_type_on_v3_converter__expect_not_implemented(v3):
     iso_pt = iso4.Point(type=iso4.PointType.Flag, north=Decimal(1), east=Decimal(2))
     with pytest.raises(NotImplementedError):
         v3.to_shapely_geom(iso_pt)
 
 
-@pytest.mark.parametrize('wkt', [
-    'POINT Z (30.5 10.2 150.0)',
-    'LINESTRING Z (30.5 10.2 150.0, 40.1 20.3 200.0, 50.2 30.4 250.0)',
-    'POLYGON Z ((30.5 10.2 150.0, 40.1 20.3 200.0, 50.2 30.4 250.0, 30.5 10.2 150.0))',
-])
+@pytest.mark.parametrize(
+    "wkt",
+    [
+        "POINT Z (30.5 10.2 150.0)",
+        "LINESTRING Z (30.5 10.2 150.0, 40.1 20.3 200.0, 50.2 30.4 250.0)",
+        "POLYGON Z ((30.5 10.2 150.0, 40.1 20.3 200.0, 50.2 30.4 250.0, 30.5 10.2 150.0))",
+    ],
+)
 def test_3d_geoms_roundtrip(v3, wkt):
     geom = shp.from_wkt(wkt)
     iso_geom = None

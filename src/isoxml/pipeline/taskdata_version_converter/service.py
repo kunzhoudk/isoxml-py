@@ -38,7 +38,9 @@ def convert_taskdata_versions(
         for ref_name, ref_data in refs.items()
     }
 
-    convert_task_grids(converted_task_data, converted_refs, target_iso, target_grid_type)
+    convert_task_grids(
+        converted_task_data, converted_refs, target_iso, target_grid_type
+    )
     validated_xsd_path = None
     if validate_output:
         validated_xsd_path = validate_taskdata_xsd(converted_task_data)

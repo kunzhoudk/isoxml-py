@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 
-from isoxml.models.base.v4.operation_technique_reference import OperationTechniqueReference
+from isoxml.models.base.v4.operation_technique_reference import (
+    OperationTechniqueReference,
+)
 
 
 @dataclass

@@ -7,4 +7,9 @@ from isoxml.pipeline.vector_to_taskdata.types import (
 )
 from isoxml.xsd_validation import validate_xsd
 
-__all__ = ["VectorToTaskDataOptions", "VectorToTaskDataResult", "convert", "validate_xsd"]
+__all__ = [
+    "VectorToTaskDataOptions",
+    "VectorToTaskDataResult",
+    "convert",
+    "validate_xsd",
+]

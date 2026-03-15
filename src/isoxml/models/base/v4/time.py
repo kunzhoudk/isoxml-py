@@ -8,13 +8,13 @@ from isoxml.models.base.v4.position import Position
 
 
 class TimeType(Enum):
-    Planned = '1',
-    Preliminary = '2',
-    Effective = '4',
-    Ineffective = '5',
-    Repair = '6',
-    Clearing = '7',
-    PoweredDown = '8',
+    Planned = ("1",)
+    Preliminary = ("2",)
+    Effective = ("4",)
+    Ineffective = ("5",)
+    Repair = ("6",)
+    Clearing = ("7",)
+    PoweredDown = ("8",)
 
 
 @dataclass

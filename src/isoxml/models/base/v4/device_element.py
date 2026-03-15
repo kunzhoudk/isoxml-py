@@ -5,13 +5,13 @@ from isoxml.models.base.v4.device_object_reference import DeviceObjectReference
 
 
 class DeviceElementType(Enum):
-    Device = '1'
-    Function = '2'
-    Bin = '3'
-    Section = '4'
-    Unit = '5'
-    Connector = '6'
-    Navigation = '7'
+    Device = "1"
+    Function = "2"
+    Bin = "3"
+    Section = "4"
+    Unit = "5"
+    Connector = "6"
+    Navigation = "7"
 
 
 @dataclass

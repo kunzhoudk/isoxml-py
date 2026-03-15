@@ -27,7 +27,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         / "output"
         / "generated_code.py"
     )
-    parser = argparse.ArgumentParser(description="Generate Python code from existing ISOXML TaskData.")
+    parser = argparse.ArgumentParser(
+        description="Generate Python code from existing ISOXML TaskData."
+    )
     parser.add_argument(
         "source",
         nargs="?",
@@ -48,6 +50,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help="Variable name used in generated code.",
     )
     return parser.parse_args(argv)
+
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)

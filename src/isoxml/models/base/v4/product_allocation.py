@@ -9,6 +9,7 @@ class ProductAllocationTransferMode(Enum):
     Emptying = "2"
     Remainder = "3"
 
+
 @dataclass
 class ProductAllocation:
     """
@@ -107,6 +108,3 @@ class ProductAllocation:
             "pattern": r"(PDT|PDT-)([0-9])+",
         },
     )
-
-
-
