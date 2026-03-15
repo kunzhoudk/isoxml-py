@@ -1,50 +1,65 @@
-"""Shared XSD validation helpers for ISOXML task data."""
+"""XSD-based validation helpers for ISOXML task data."""
 
 from __future__ import annotations
 
-from importlib import resources as _pkg_resources
+from importlib import resources
 from pathlib import Path
+from typing import Final
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml._optional_deps import require_xmlschema
 from isoxml.io.writer import to_xml
 
-_TaskData = iso3.Iso11783TaskData | iso4.Iso11783TaskData
+TaskData = iso3.Iso11783TaskData | iso4.Iso11783TaskData
+SUPPORTED_XML_VERSIONS: Final[frozenset[str]] = frozenset({"3", "4"})
+SCHEMA_PACKAGE: Final[str] = "isoxml.reference.xsd"
 
 __all__ = ["validate_xsd"]
 
 
 def validate_xsd(
-    task_data: _TaskData,
+    task_data: TaskData,
     xml_version: int | str | None = None,
 ) -> Path:
-    """Validate task data XML against the bundled ISOXML XSD schema."""
+    """Validate ISOXML task data against the bundled task-file XSD."""
+    version = resolve_xml_version(task_data, xml_version)
+    schema_ref = resolve_taskdata_schema(version)
+
     xmlschema = require_xmlschema()
-    version = _resolve_xml_version(task_data, xml_version)
-    xsd_name = f"ISO11783_TaskFile_V{version}-3.xsd"
-    xsd_ref = _pkg_resources.files("isoxml.reference.xsd").joinpath(xsd_name)
-    with _pkg_resources.as_file(xsd_ref) as xsd_path:
-        if not xsd_path.exists():
-            raise FileNotFoundError(f"Bundled XSD not found: {xsd_name}")
-        xmlschema.validate(to_xml(task_data), xsd_path)
-    return Path(str(xsd_ref))
+    with resources.as_file(schema_ref) as schema_path:
+        xmlschema.validate(to_xml(task_data), schema_path)
+
+    return Path(str(schema_ref))
 
 
-def _resolve_xml_version(
-    task_data: _TaskData,
+def resolve_xml_version(
+    task_data: TaskData,
     xml_version: int | str | None,
 ) -> str:
+    """Return the supported XML major version for validation."""
     if xml_version is not None:
-        version = str(xml_version)
-        if version in {"3", "4"}:
-            return version
-        raise ValueError(f"Unsupported XML version for XSD validation: {xml_version!r}")
+        return normalize_xml_version(xml_version)
 
     version_major = getattr(task_data, "version_major", None)
     if version_major is None:
         raise ValueError("Task data has no version_major; cannot resolve XSD version.")
-    version = str(version_major.value)
-    if version not in {"3", "4"}:
-        raise ValueError(f"Unsupported XML version for XSD validation: {version!r}")
+    return normalize_xml_version(version_major.value)
+
+
+def normalize_xml_version(xml_version: int | str) -> str:
+    """Normalize and validate a supported XML major version."""
+    version = str(xml_version)
+    if version not in SUPPORTED_XML_VERSIONS:
+        raise ValueError(f"Unsupported XML version for XSD validation: {xml_version!r}")
     return version
+
+
+def resolve_taskdata_schema(xml_version: str):
+    """Resolve the bundled task-file schema for the requested XML version."""
+    schema_name = f"ISO11783_TaskFile_V{xml_version}-3.xsd"
+    schema_ref = resources.files(SCHEMA_PACKAGE).joinpath(schema_name)
+    with resources.as_file(schema_ref) as schema_path:
+        if not schema_path.exists():
+            raise FileNotFoundError(f"Bundled XSD not found: {schema_name}")
+    return schema_ref
