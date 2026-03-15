@@ -6,7 +6,7 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
-from isoxml.io import write_to_dir, write_to_zip
+from isoxml.cli._common import write_taskdata_bundle
 from isoxml.pipeline.shp_to_taskdata import ShpToTaskDataOptions, convert, validate_xsd
 
 
@@ -144,13 +144,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         xsd_path = validate_xsd(result.task_data, args.xml_version)
         print(f"  xsd: OK ({xsd_path.name})")
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    write_to_dir(args.output_dir, result.task_data, result.refs)
-
-    if args.output_zip is not None:
-        args.output_zip.parent.mkdir(parents=True, exist_ok=True)
-        with open(args.output_zip, "wb") as file_handle:
-            write_to_zip(file_handle, result.task_data, result.refs)
+    write_taskdata_bundle(
+        result.task_data,
+        result.refs,
+        output_dir=args.output_dir,
+        output_zip=args.output_zip,
+    )
 
     grid = result.task_data.tasks[0].grids[0]
     print("ISOXML conversion complete")

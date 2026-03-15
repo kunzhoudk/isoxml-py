@@ -14,9 +14,14 @@ from pyproj import Transformer
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
+from isoxml.cli._common import (
+    default_sidecar_path,
+    load_taskdata_bundle,
+    require_grid,
+    require_task,
+)
 from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
 from isoxml.grid import decode
-from isoxml.io import read_from_path, read_from_zip
 from isoxml.models import DDEntity
 
 
@@ -45,15 +50,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--out", type=Path, default=None, help="Output PNG path.")
     parser.add_argument("--cells-out", type=Path, default=None, help="Output GeoJSON for grid cells.")
     return parser.parse_args(argv)
-
-
-def load(source: Path):
-    if source.is_dir():
-        return read_from_path(source)
-    if source.suffix.lower() == ".zip":
-        return read_from_zip(source)
-    raise ValueError(f"Expected a directory or .zip file, got: {source}")
-
 
 def _converter(task_data):
     if getattr(task_data.version_major, "value", None) == "4":
@@ -165,15 +161,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     ddi = DDEntity.from_id(args.ddi)
 
-    task_data, refs = load(args.source)
-
-    if len(task_data.tasks) <= args.task:
-        raise IndexError(f"Task index {args.task} out of range.")
-    task = task_data.tasks[args.task]
-
-    if len(task.grids) <= args.grid:
-        raise IndexError(f"Grid index {args.grid} out of range.")
-    grid = task.grids[args.grid]
+    task_data, refs = load_taskdata_bundle(args.source)
+    task = require_task(task_data, args.task)
+    grid = require_grid(task, args.grid)
 
     grid_bin = refs.get(grid.filename)
     if not isinstance(grid_bin, bytes):
@@ -199,15 +189,12 @@ def main(argv: Sequence[str] | None = None) -> None:
     ax.set_ylabel("Latitude")
     ax.set_aspect("equal", adjustable="datalim")
 
-    def _default(base: Path, name: str) -> Path:
-        return (base / name) if args.source.is_dir() else args.source.with_name(name)
-
-    out_png = args.out or _default(args.source, "overlay_check.png")
+    out_png = args.out or default_sidecar_path(args.source, "overlay_check.png")
     out_png.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out_png, dpi=180, bbox_inches="tight")
     plt.close(fig)
 
-    out_geojson = args.cells_out or _default(args.source, "grid_cells.geojson")
+    out_geojson = args.cells_out or default_sidecar_path(args.source, "grid_cells.geojson")
     out_geojson.parent.mkdir(parents=True, exist_ok=True)
     with open(out_geojson, "w", encoding="utf-8") as file_handle:
         file_handle.write(cells_gdf.to_json(drop_id=True))

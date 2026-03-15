@@ -10,8 +10,8 @@ import numpy as np
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
+from isoxml.cli._common import load_taskdata_bundle, require_grid, require_task
 from isoxml.grid import decode
-from isoxml.io import read_from_path, read_from_zip
 from isoxml.models import DDEntity
 
 
@@ -24,15 +24,6 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--shp", type=Path, default=None, help="Source shapefile for value comparison.")
     parser.add_argument("--value-field", type=str, default=None, help="Numeric field name in shapefile.")
     return parser.parse_args(argv)
-
-
-def load(source: Path):
-    if source.is_dir():
-        return read_from_path(source)
-    if source.suffix.lower() == ".zip":
-        return read_from_zip(source)
-    raise ValueError(f"Expected a directory or .zip file, got: {source}")
-
 
 def _expected_byte_length(grid, ddi_count: int = 1) -> int:
     cells = int(grid.maximum_row) * int(grid.maximum_column)
@@ -101,15 +92,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     ddi = DDEntity.from_id(args.ddi)
 
-    task_data, refs = load(args.source)
-
-    if len(task_data.tasks) <= args.task:
-        raise IndexError(f"Task index {args.task} out of range.")
-    task = task_data.tasks[args.task]
-
-    if len(task.grids) <= args.grid:
-        raise IndexError(f"Grid index {args.grid} out of range.")
-    grid = task.grids[args.grid]
+    task_data, refs = load_taskdata_bundle(args.source)
+    task = require_task(task_data, args.task)
+    grid = require_grid(task, args.grid)
 
     grid_bin = refs.get(grid.filename)
     if not isinstance(grid_bin, bytes):

@@ -6,7 +6,7 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
-from isoxml.io import read_from_path, read_from_zip, write_to_dir, write_to_zip
+from isoxml.cli._common import load_taskdata_bundle, write_taskdata_bundle
 from isoxml.pipeline import convert_taskdata_versions
 
 
@@ -29,13 +29,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    if bool(args.output_dir) == bool(args.output_zip):
-        raise SystemExit("Specify exactly one of --output-dir or --output-zip.")
-
-    if args.source.suffix.lower() == ".zip":
-        task_data, refs = read_from_zip(args.source)
-    else:
-        task_data, refs = read_from_path(args.source)
+    task_data, refs = load_taskdata_bundle(args.source)
 
     result = convert_taskdata_versions(
         task_data,
@@ -45,11 +39,13 @@ def main(argv: Sequence[str] | None = None) -> None:
         validate_output=not args.skip_xsd_validation,
     )
 
-    if args.output_dir:
-        args.output_dir.mkdir(parents=True, exist_ok=True)
-        write_to_dir(args.output_dir, result.task_data, result.refs)
-    else:
-        write_to_zip(args.output_zip, result.task_data, result.refs)
+    write_taskdata_bundle(
+        result.task_data,
+        result.refs,
+        output_dir=args.output_dir,
+        output_zip=args.output_zip,
+        require_exactly_one=True,
+    )
 
     if result.validated_xsd_path is not None:
         print(f"XSD validation: OK ({result.validated_xsd_path.name})")

@@ -10,17 +10,14 @@ import numpy as np
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
+from isoxml.cli._common import (
+    default_sidecar_path,
+    load_taskdata_bundle,
+    require_grid,
+    require_task,
+)
 from isoxml.grid import decode
-from isoxml.io import read_from_path, read_from_zip
 from isoxml.models import DDEntity
-
-
-def load(source: Path):
-    if source.is_dir():
-        return read_from_path(source)
-    if source.suffix.lower() == ".zip":
-        return read_from_zip(source)
-    raise ValueError(f"Expected a directory or .zip file, got: {source}")
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -43,15 +40,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
     ddi = DDEntity.from_id(args.ddi)
 
-    task_data, refs = load(args.source)
-
-    if len(task_data.tasks) <= args.task:
-        raise IndexError(f"Task index {args.task} out of range (found {len(task_data.tasks)}).")
-    task = task_data.tasks[args.task]
-
-    if len(task.grids) <= args.grid:
-        raise IndexError(f"Grid index {args.grid} out of range (found {len(task.grids)}).")
-    grid = task.grids[args.grid]
+    task_data, refs = load_taskdata_bundle(args.source)
+    task = require_task(task_data, args.task)
+    grid = require_grid(task, args.grid)
 
     grid_bin = refs.get(grid.filename)
     if not isinstance(grid_bin, bytes):
@@ -84,11 +75,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     print(f"  non-zero:     {int(np.count_nonzero(arr))}")
     print(f"\nArray preview:\n{arr}")
 
-    csv_path = (
-        args.source / f"{grid.filename}.csv"
-        if args.source.is_dir()
-        else args.source.with_name(f"{grid.filename}.csv")
-    )
+    csv_path = default_sidecar_path(args.source, f"{grid.filename}.csv")
     np.savetxt(csv_path, arr, delimiter=",", fmt="%.6f")
     print(f"\nCSV written: {csv_path}")
 
