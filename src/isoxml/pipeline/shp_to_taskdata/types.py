@@ -1,4 +1,4 @@
-"""Shared public types for the shapefile-to-grid pipeline."""
+"""Shared public types for the shapefile-to-taskdata pipeline."""
 
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ import isoxml.models.base.v4 as iso4
 
 
 @dataclass(frozen=True)
-class ShpToGridOptions:
-    """Conversion options for polygon shapefile to ISOXML grid task data."""
+class ShpToTaskDataOptions:
+    """Conversion options for polygon shapefile to ISOXML task data."""
 
     shp_path: Path
     value_field: str | None = None
@@ -31,7 +31,7 @@ class ShpToGridOptions:
 
 
 @dataclass(frozen=True)
-class ShpToGridResult:
+class ShpToTaskDataResult:
     """Result bundle produced by :func:`convert`."""
 
     task_data: iso.Iso11783TaskData | iso4.Iso11783TaskData

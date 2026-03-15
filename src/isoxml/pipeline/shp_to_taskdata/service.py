@@ -1,4 +1,4 @@
-"""Orchestration entry point for the shapefile-to-grid pipeline."""
+"""Orchestration entry point for the shapefile-to-taskdata pipeline."""
 
 from __future__ import annotations
 
@@ -7,17 +7,17 @@ import math
 import geopandas as gpd
 import shapely as shp
 
-from isoxml.pipeline.shp_to_grid.geometry import (
+from isoxml.pipeline.shp_to_taskdata.geometry import (
     ensure_polygon_gdf,
     rasterize,
     resolve_value_field,
 )
-from isoxml.pipeline.shp_to_grid.inputs import resolve_value_unit
-from isoxml.pipeline.shp_to_grid.taskdata import build_result
-from isoxml.pipeline.shp_to_grid.types import ShpToGridOptions, ShpToGridResult
+from isoxml.pipeline.shp_to_taskdata.inputs import resolve_value_unit
+from isoxml.pipeline.shp_to_taskdata.taskdata import build_result
+from isoxml.pipeline.shp_to_taskdata.types import ShpToTaskDataOptions, ShpToTaskDataResult
 
 
-def convert(options: ShpToGridOptions) -> ShpToGridResult:
+def convert(options: ShpToTaskDataOptions) -> ShpToTaskDataResult:
     """Build ISOXML task data and binary grid from an application-map shapefile."""
     if not options.shp_path.exists():
         raise FileNotFoundError(f"Shapefile not found: {options.shp_path}")

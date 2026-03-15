@@ -13,9 +13,9 @@ import isoxml.models.base.v4 as iso4
 from isoxml.geometry.shapely import ShapelyConverterV3, ShapelyConverterV4
 from isoxml.grid.codec import encode_type1, encode_type2
 from isoxml.models.ddi import DDEntity
-from isoxml.pipeline.shp_to_grid.geometry import infer_partfield_name
-from isoxml.pipeline.shp_to_grid.inputs import trim, unit_factor_to_ddi
-from isoxml.pipeline.shp_to_grid.types import ShpToGridOptions, ShpToGridResult
+from isoxml.pipeline.shp_to_taskdata.geometry import infer_partfield_name
+from isoxml.pipeline.shp_to_taskdata.inputs import trim, unit_factor_to_ddi
+from isoxml.pipeline.shp_to_taskdata.types import ShpToTaskDataOptions, ShpToTaskDataResult
 
 
 @dataclass(frozen=True)
@@ -60,7 +60,7 @@ def count_decimals(value: float, max_decimals: int = 7) -> int:
 
 
 def build_result(
-    options: ShpToGridOptions,
+    options: ShpToTaskDataOptions,
     gdf_boundary_wgs84,
     boundary_metric: shp.Geometry,
     boundary_wgs84: shp.Geometry,
@@ -72,7 +72,7 @@ def build_result(
     value_field: str,
     effective_unit: str,
     unit_source: str,
-) -> ShpToGridResult:
+) -> ShpToTaskDataResult:
     version_ctx = select_version_context(options.xml_version)
     iso_mod = version_ctx.iso_mod
     dd_entity = DDEntity.from_id(options.ddi)
@@ -210,7 +210,7 @@ def build_result(
         value_presentations=[value_presentation],
     )
 
-    return ShpToGridResult(
+    return ShpToTaskDataResult(
         task_data=task_data,
         refs={grid.filename: grid_bin},
         value_field=value_field,

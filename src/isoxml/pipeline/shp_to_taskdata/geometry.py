@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import shapely as shp
 
-from isoxml.pipeline.shp_to_grid.inputs import trim
+from isoxml.pipeline.shp_to_taskdata.inputs import trim
 
 if TYPE_CHECKING:
     import geopandas as gpd

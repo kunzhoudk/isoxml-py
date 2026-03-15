@@ -7,7 +7,7 @@ import shapely as shp
 import isoxml.models.base.v3 as iso3
 from isoxml.grid.codec import decode
 from isoxml.geometry.shapely import ShapelyConverterV3
-from isoxml.pipeline.shp_to_grid import ShpToGridOptions, convert
+from isoxml.pipeline.shp_to_taskdata import ShpToTaskDataOptions, convert
 
 gpd = pytest.importorskip("geopandas")
 
@@ -23,8 +23,8 @@ def _options(
         grid_type: str = "1",
         value_unit: str = "kg/ha",
         cell_size_m: float = 3.0,
-) -> ShpToGridOptions:
-    return ShpToGridOptions(
+) -> ShpToTaskDataOptions:
+    return ShpToTaskDataOptions(
         shp_path=shp_path,
         value_field="rate",
         ddi=6,

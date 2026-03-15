@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Sequence
 
 from isoxml.io import write_to_dir, write_to_zip
-from isoxml.pipeline.shp_to_grid import ShpToGridOptions, convert, validate_xsd
+from isoxml.pipeline.shp_to_taskdata import ShpToTaskDataOptions, convert, validate_xsd
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -121,7 +121,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
 
-    options = ShpToGridOptions(
+    options = ShpToTaskDataOptions(
         shp_path=args.shp_path,
         value_field=args.value_field,
         ddi=args.ddi,
