@@ -7,7 +7,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pandas as pd
 import shapely as shp
+from pandas.api.types import is_numeric_dtype
 
 from isoxml.pipeline.vector_to_taskdata.inputs import trim
 
@@ -21,6 +23,22 @@ _BOUNDARY_LABELS = {
     "partfieldboundary",
     "fieldborder",
 }
+
+
+def _coerce_numeric_column(gdf: "gpd.GeoDataFrame", column: str) -> bool:
+    series = gdf[column]
+    if is_numeric_dtype(series):
+        return True
+
+    converted = pd.to_numeric(series, errors="coerce")
+    non_null_mask = series.notna()
+    if not bool(non_null_mask.any()):
+        return False
+    if converted[non_null_mask].isna().any():
+        return False
+
+    gdf[column] = converted
+    return True
 
 
 def iter_polygons(geom):
@@ -89,6 +107,11 @@ def split_embedded_boundary(
 
 def auto_value_field(gdf: "gpd.GeoDataFrame") -> str:
     numeric_cols = list(gdf.select_dtypes(include=["number"]).columns)
+    for col in gdf.columns:
+        if col == "geometry" or col in numeric_cols:
+            continue
+        if _coerce_numeric_column(gdf, col):
+            numeric_cols.append(col)
     if not numeric_cols:
         raise ValueError("No numeric field found. Pass value_field explicitly.")
     priority = ["rate", "dose", "value", "amount", "kg", "fert", "app"]
@@ -104,7 +127,7 @@ def resolve_value_field(gdf: "gpd.GeoDataFrame", requested: str | None) -> str:
         return auto_value_field(gdf)
     if requested not in gdf.columns:
         raise ValueError(f"Field '{requested}' does not exist in the vector input.")
-    if not np.issubdtype(gdf[requested].dtype, np.number):
+    if not _coerce_numeric_column(gdf, requested):
         raise ValueError(f"Field '{requested}' is not numeric.")
     return requested
 

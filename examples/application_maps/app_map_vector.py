@@ -17,7 +17,7 @@ from isoxml.io import write_to_dir
 from isoxml.models import DDEntity
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[1]
-INPUT_PATH = EXAMPLES_DIR / "input" / "app_map_vector.geojson"
+INPUT_PATH = EXAMPLES_DIR / "input" / "test_shp_application_map_with_boundary.geojson"
 OUTPUT_DIR = EXAMPLES_DIR / "output" / "app_map_vector"
 
 DD_ENTITY = DDEntity.from_id(1)

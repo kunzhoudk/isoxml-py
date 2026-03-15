@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def _options(
         source_path: Path,
-        boundary_path: Path,
+        boundary_path: Path | None,
         *,
         boundary_mask: str = "touch",
         grid_extent: str = "boundary",
@@ -139,3 +139,29 @@ def test_auto_and_explicit_units__expected_scaling():
     ddi_raw = decode(ddi_result.refs[ddi_grid.filename], ddi_grid, scale=False)
     non_zero = ddi_raw != 0
     assert np.all(kg_raw[non_zero] == ddi_raw[non_zero] * 100)
+
+
+def test_geojson_embedded_boundary__string_numeric_value_field_is_accepted():
+    result = convert(VectorToTaskDataOptions(
+        source_path=REPO_ROOT / "examples/input/test_shp_application_map_with_boundary.geojson",
+        boundary_path=None,
+        value_field="dose",
+        ddi=6,
+        value_unit="kg/ha",
+        grid_type="1",
+        xml_version="4",
+        cell_size_m=3.0,
+        boundary_mask="touch",
+        grid_extent="boundary",
+        input_crs=None,
+        partfield_name=None,
+        software_manufacturer="isoxml-py",
+        software_version="0.1.0",
+    ))
+
+    grid = result.task_data.tasks[0].grids[0]
+    assert result.value_field == "dose"
+    assert result.effective_unit == "kg/ha"
+    assert int(grid.maximum_row) > 0
+    assert int(grid.maximum_column) > 0
+    assert grid.filename in result.refs

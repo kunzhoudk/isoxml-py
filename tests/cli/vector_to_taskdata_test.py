@@ -63,7 +63,7 @@ def test_cli_run__when_geojson_with_embedded_boundary__expect_outputs_created_an
     output_dir = tmp_path / "taskdata_geojson"
 
     proc = _run_cli(
-        "examples/input/app_map_vector.geojson",
+        "examples/input/test_shp_application_map_with_boundary.geojson",
         "--grid-type",
         "1",
         "--xml-version",
