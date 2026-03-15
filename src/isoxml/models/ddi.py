@@ -7,8 +7,8 @@ Each entry carries a name, physical unit, and bit resolution (scale factor).
 Full registry: https://www.isobus.net/isobus/dDEntity
 
 How to refresh ``ddi_entities.json``:
-1. ``python -m isoxml.data.update_ddi_registry``
-2. Commit the updated ``src/isoxml/data/ddi_entities.json``
+1. ``python -m isoxml.reference.update_ddi_registry``
+2. Commit the updated ``src/isoxml/reference/ddi_entities.json``
 """
 
 import json
@@ -17,7 +17,7 @@ from importlib import resources
 
 # Load all DDI definitions from the bundled JSON file at import time.
 # Keys are converted from strings to ints for direct O(1) lookup.
-_json_ref = resources.files("isoxml.data").joinpath("ddi_entities.json")
+_json_ref = resources.files("isoxml.reference").joinpath("ddi_entities.json")
 with _json_ref.open(encoding="utf-8") as _fh:
     _DD_REGISTRY: dict[int, dict] = {int(k): v for k, v in json.load(_fh).items()}
 

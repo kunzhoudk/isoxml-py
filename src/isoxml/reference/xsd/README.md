@@ -1,7 +1,7 @@
 These XSD files are bundled copies of the official ISOXML schemas published by the
 [ISOBUS website](https://www.isobus.net/isobus/file/supportingDocuments).
 
-They are stored in `src/isoxml/data/xsd/` so the package can use them at runtime
+They are stored in `src/isoxml/reference/xsd/` so the package can use them at runtime
 via `importlib.resources`, without depending on an external checkout-time
 `resources/` directory.
 

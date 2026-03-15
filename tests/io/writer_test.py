@@ -56,7 +56,7 @@ def task_with_grid():
 def test__to_xml__when_valid_task_data__expect_valid_xml(task_with_grid):
     task_data, _ = task_with_grid
     xml = to_xml(task_data)
-    xsd_ref = resources.files("isoxml.data.xsd").joinpath("ISO11783_TaskFile_V4-3.xsd")
+    xsd_ref = resources.files("isoxml.reference.xsd").joinpath("ISO11783_TaskFile_V4-3.xsd")
     with resources.as_file(xsd_ref) as xsd_path:
         xmlschema.validate(xml, xsd_path)
 

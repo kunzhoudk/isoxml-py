@@ -7,12 +7,12 @@ This README explains what is inside `isoxml/models`:
 ## XSD code generation
 
 ```bash
-.venv/bin/xsdata generate src/isoxml/data/xsd/ISO11783_TaskFile_V3-3.xsd \
+.venv/bin/xsdata generate src/isoxml/reference/xsd/ISO11783_TaskFile_V3-3.xsd \
         --package isoxml.models.base.v3 \
         --structure-style clusters \
         --no-relative-imports
 
-.venv/bin/xsdata generate src/isoxml/data/xsd/ISO11783_TaskFile_V4-3.xsd \
+.venv/bin/xsdata generate src/isoxml/reference/xsd/ISO11783_TaskFile_V4-3.xsd \
         --package isoxml.models.base.v4 \
         --structure-style clusters \
         --no-relative-imports

@@ -76,7 +76,7 @@ namespaces = false
 package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
-"isoxml" = ["data/*", "data/xsd/*"]
+"isoxml" = ["reference/*", "reference/xsd/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

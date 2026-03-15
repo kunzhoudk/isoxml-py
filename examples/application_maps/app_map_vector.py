@@ -111,7 +111,7 @@ def main() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     write_to_dir(OUTPUT_DIR, task_data)
 
-    xsd_ref = resources.files("isoxml.data.xsd").joinpath("ISO11783_TaskFile_V4-3.xsd")
+    xsd_ref = resources.files("isoxml.reference.xsd").joinpath("ISO11783_TaskFile_V4-3.xsd")
     with resources.as_file(xsd_ref) as xsd_path:
         xmlschema.validate(OUTPUT_DIR / "TASKDATA.XML", xsd_path)
     print(f"Written and validated: {OUTPUT_DIR}")

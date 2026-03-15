@@ -23,7 +23,7 @@ def validate_xsd(
     xmlschema = require_xmlschema()
     version = _resolve_xml_version(task_data, xml_version)
     xsd_name = f"ISO11783_TaskFile_V{version}-3.xsd"
-    xsd_ref = _pkg_resources.files("isoxml.data.xsd").joinpath(xsd_name)
+    xsd_ref = _pkg_resources.files("isoxml.reference.xsd").joinpath(xsd_name)
     with _pkg_resources.as_file(xsd_ref) as xsd_path:
         if not xsd_path.exists():
             raise FileNotFoundError(f"Bundled XSD not found: {xsd_name}")
