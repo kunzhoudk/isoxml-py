@@ -1,239 +1,312 @@
-# ISOXML library for python 
+# ISOXML-PY
 
-a python library that handles import and export of ISOXML TaskData files as specified in ISO11783 part 10.
-inspired by [isoxml-js](https://github.com/dev4Agriculture/isoxml-js) and powered by [xsdata](https://github.com/tefra/xsdata) XML bindings.
+`isoxml` 是一个用于读写、校验、生成和转换 ISOXML TaskData 的 Python 工具库，面向精准农业、FMIS、处方图生成和农机数据交换场景。
 
-The main features:
-* supports v3 and v4
-* read/write directly from zip, TASKDATA-dir or any string
-* conversion between shapely and isoxml geometries
-* conversion of numpy array to grid data binary files
-* generate Python code from existing TASKDATA.XML (via xsdata)
+项目当前重点覆盖：
 
-## Installation
-```
+- ISOXML TaskData 的读取、写出与打包
+- ISOXML v3 / v4 的模型与版本转换
+- Shapely 几何与 ISOXML 几何互转
+- 网格二进制文件的编码与解码
+- 从矢量数据生成 ISOXML taskdata
+- 基于 XSD 的结构校验
+
+## 适合谁使用
+
+如果你正在做这些事情，这个项目会比较合适：
+
+- 从 FMIS 或 GIS 数据生成 ISOXML
+- 读取终端导出的 `TASKDATA.XML` / ZIP 包
+- 将 Shapefile、GeoJSON 等矢量应用图转换为可导入农机终端的 ISOXML
+- 在 Python 中分析、改写、重打包 ISOXML 数据
+- 需要验证输出是否符合 ISOXML XSD
+
+## 安装
+
+基础安装：
+
+```bash
 pip install isoxml
 ```
 
-Shapefile and XSD features are included in the base install.
+如果你需要 notebook、可视化或开发依赖：
 
-## Command Line Tools
+```bash
+pip install .[dev]
+```
 
-The project now exposes its tool-style scripts as console commands under `src/isoxml/cli/`.
-The `examples/` directory contains themed demos, notebooks, and sample data.
+当前基础安装已包含以下常用能力所需依赖：
 
-Available commands:
+- `geopandas`
+- `shapely`
+- `numpy`
+- `xmlschema`
+
+## 推荐使用 uv
+
+如果你是在本地检出这个仓库并准备运行示例、CLI、测试或 notebook，推荐使用 [uv](https://docs.astral.sh/uv/)。
+
+原因很简单：
+
+- 这个项目的示例和文档默认使用 `uv run ...`
+- `uv` 能更方便地管理虚拟环境和依赖
+- 不需要你手动激活 `.venv` 才能运行大多数命令
+
+### 1. 安装 uv
+
+如果你的环境里还没有 `uv`，可以先安装：
+
+```bash
+pip install uv
+```
+
+### 2. 安装项目依赖
+
+只安装基础依赖：
+
+```bash
+uv sync
+```
+
+安装开发依赖：
+
+```bash
+uv sync --extra dev
+```
+
+### 3. 使用 uv 运行项目
+
+运行 CLI：
 
 ```bash
 uv run isoxml-vector-to-taskdata --help
 uv run isoxml-convert-taskdata --help
-uv run isoxml-inspect-grid-overlay --help
-uv run isoxml-inspect-vector --help
-uv run isoxml-validate-grid-bin --help
-uv run isoxml-inspect-grid --help
-uv run isoxml-validate-taskdata --help
-uv run isoxml-generate-pycode --help
 ```
 
-Typical examples:
+运行 Python 脚本：
 
 ```bash
-uv run isoxml-vector-to-taskdata examples/input/small/shp/Rx.shp \
-  --boundary-path examples/input/small/boundary/Boundary.shp \
-  --xml-version 4 \
-  --grid-type 2 \
-  --output-dir examples/output/rx_grid
-
-uv run isoxml-convert-taskdata examples/expected/small_xml_v3_type_1_auto.zip \
-  --target-xml-version 4 \
-  --target-grid-type 2 \
-  --output-dir examples/output/converted_v4_type_2
-
-uv run isoxml-validate-taskdata examples/output/converted_v4_type_2
+uv run python examples/application_maps/prepare_test_shp_application_map_geojson.py
 ```
 
-## Usage Examples
+运行测试：
 
-### Reading
+```bash
+uv run pytest
+```
+
+运行静态检查：
+
+```bash
+uv run ruff check
+```
+
+如果你只是作为库使用者，把它安装到你自己的项目里，那么 `pip install isoxml` 也完全可以。
+
+## 快速开始
+
+### 1. 读取 ISOXML
 
 ```python
 from pathlib import Path
 from isoxml import read_from_zip, read_from_path, read_from_xml
 
-# from a ZIP archive
-task_data, refs = read_from_zip(Path('/path/to/TASKDATA.zip'))
+# 读取 ZIP
+task_data, refs = read_from_zip(Path("TASKDATA.zip"))
 
-# from a TASKDATA directory
-task_data, refs = read_from_path(Path('/path/to/TASKDATA/'))
+# 读取 TASKDATA 目录
+task_data, refs = read_from_path(Path("TASKDATA"))
 
-# from an XML string
+# 从 XML 字符串读取
 task_data = read_from_xml(xml_string)
 ```
 
-### Writing
+### 2. 写出 ISOXML
 
 ```python
-import isoxml.models.base.v4 as iso
-from isoxml import to_xml, write_to_dir, write_to_zip
 from pathlib import Path
 
+import isoxml.models.base.v4 as iso
+from isoxml import write_to_dir, write_to_zip
+
 customer = iso.Customer(id="CTR0001", last_name="demo_customer")
-farm = iso.Farm(id="FRM0001", designator="demo farm", customer_id_ref=customer.id)
+farm = iso.Farm(id="FRM0001", designator="demo_farm", customer_id_ref=customer.id)
+
 task_data = iso.Iso11783TaskData(
-    management_software_manufacturer="josephinum research",
-    management_software_version="0.0.0",
+    management_software_manufacturer="isoxml-py",
+    management_software_version="0.1.0",
     data_transfer_origin=iso.Iso11783TaskDataDataTransferOrigin.FMIS,
     customers=[customer],
     farms=[farm],
 )
 
-# as XML string
-xml_content = to_xml(task_data)
-
-# to a directory
-write_to_dir(Path("output/"), task_data)
-
-# to a ZIP archive
-write_to_zip(Path("output.zip"), task_data)
+write_to_dir(Path("output/TASKDATA"), task_data)
+write_to_zip(Path("output/TASKDATA.zip"), task_data)
 ```
 
-### Geometry conversion
+### 3. 从矢量数据生成 taskdata
+
+Shapefile 示例：
+
+```bash
+uv run isoxml-vector-to-taskdata \
+  examples/input/small/shp/Rx.shp \
+  --boundary-path examples/input/small/boundary/Boundary.shp \
+  --xml-version 4 \
+  --grid-type 2 \
+  --value-field rate \
+  --output-dir examples/output/rx_grid
+```
+
+GeoJSON 示例：
+
+```bash
+uv run isoxml-vector-to-taskdata \
+  examples/input/test_shp_application_map_with_boundary.geojson \
+  --xml-version 4 \
+  --grid-type 1 \
+  --value-field dose \
+  --output-dir examples/output/geojson_grid
+```
+
+### 4. 转换已有 taskdata 的版本 / grid 类型
+
+```bash
+uv run isoxml-convert-taskdata \
+  examples/expected/small_xml_v3_type_1_auto.zip \
+  --target-xml-version 4 \
+  --target-grid-type 2 \
+  --output-dir examples/output/converted_v4_type_2
+```
+
+### 5. 校验输出是否符合 XSD
+
+```bash
+uv run isoxml-validate-taskdata examples/output/converted_v4_type_2
+```
+
+## 命令行工具
+
+项目提供了一组稳定的 CLI，可直接通过 `uv run` 或安装后的命令调用。
+
+```bash
+uv run isoxml-vector-to-taskdata --help
+uv run isoxml-convert-taskdata --help
+uv run isoxml-prepare-application-map-geojson --help
+uv run isoxml-inspect-vector --help
+uv run isoxml-inspect-grid --help
+uv run isoxml-inspect-grid-overlay --help
+uv run isoxml-validate-taskdata --help
+uv run isoxml-validate-grid-bin --help
+uv run isoxml-generate-pycode --help
+```
+
+这些命令分别适合：
+
+- `isoxml-vector-to-taskdata`：从 Shapefile / GeoJSON / GPKG 生成 taskdata
+- `isoxml-convert-taskdata`：在 XML 版本和 grid 类型之间转换
+- `isoxml-prepare-application-map-geojson`：把 polygon 矢量标准化为内嵌边界的 GeoJSON 应用图
+- `isoxml-inspect-vector`：检查输入矢量字段、坐标系和数值列
+- `isoxml-inspect-grid`：查看 GRDxxxxx.bin 数据内容
+- `isoxml-inspect-grid-overlay`：检查 GRDxxxxx.bin  与地块边界的空间对齐
+- `isoxml-validate-taskdata`：做 XSD 校验
+- `isoxml-validate-grid-bin`：检查 GRDxxxxx.bin 二进制文件
+- `isoxml-generate-pycode`：从现有 TaskData 生成 Python 构造代码，便于调试、复现和二次编辑
+
+## Python API 重点能力
+
+### 版本校验
+
+```python
+from isoxml import validate_xsd
+
+xsd_path = validate_xsd(task_data, xml_version="4")
+print(xsd_path)
+```
+
+### taskdata 版本转换
+
+```python
+from isoxml import convert_taskdata_versions
+
+result = convert_taskdata_versions(
+    task_data,
+    refs,
+    target_xml_version=4,
+    target_grid_type=2,
+    validate_output=True,
+)
+```
+
+### 几何转换
 
 ```python
 import shapely as shp
 import isoxml.models.base.v4 as iso
 from isoxml import ShapelyConverterV4
 
-conv = ShapelyConverterV4()
-shp_polygon = shp.from_wkt("POLYGON ((15.14 48.12, 15.15 48.12, 15.15 48.13, 15.14 48.12))")
-iso_polygon = conv.to_iso_polygon(shp_polygon, iso.PolygonType.PartfieldBoundary)
+converter = ShapelyConverterV4()
+polygon = shp.from_wkt("POLYGON ((15.14 48.12, 15.15 48.12, 15.15 48.13, 15.14 48.12))")
+iso_polygon = converter.to_iso_polygon(polygon, iso.PolygonType.PartfieldBoundary)
 ```
 
-### Grid encoding / decoding
+### grid（GRDxxxxx.bin） 编解码
 
 ```python
-import numpy as np
-from isoxml import encode_type2, decode
+from isoxml import decode, encode_type2
 from isoxml.models import DDEntity
 
 ddi = DDEntity.from_id(6)
 grid_bytes = encode_type2(numpy_array, grid_element, ddi_list=[ddi])
-numpy_array = decode(grid_bytes, grid_element, ddi_list=[ddi])
+decoded = decode(grid_bytes, grid_element, ddi_list=[ddi])
 ```
 
-```xml
-<ISO11783_TaskData VersionMajor="4" VersionMinor="3" ManagementSoftwareManufacturer="josephinum research" ManagementSoftwareVersion="0.0.0" DataTransferOrigin="1">
-    <CTR A="CTR0001" B="demo_customer"/>
-    <FRM A="FRM0001" B="demo farm" I="CTR0001"/>
-</ISO11783_TaskData>
+## 示例与样例数据
+
+示例集中在 [examples/README.md](examples/README.md)：
+
+- `examples/application_maps/`：应用图示例
+- `examples/input/`：输入样例
+- `examples/expected/`：固定输出样例
+- `examples/output/`：本地运行产物
+- `examples/grid_overlay_viewer.ipynb`：grid overlay notebook
+- `examples/partfield_viewer.ipynb`：partfield notebook
+
+如果你想快速上手，建议优先看：
+
+- [run_shp_to_taskdata.sh](examples/bash_script/run_shp_to_taskdata.sh)
+- [run_geojson_to_taskdata.sh](examples/bash_script/run_geojson_to_taskdata.sh)
+- [run_check_grid_overlay.sh](examples/bash_script/run_check_grid_overlay.sh)
+
+## 项目结构
+
+```text
+src/isoxml/
+  cli/                      命令行入口
+  io/                       读取、写出、外部文件处理
+  geometry/                 几何转换
+  grid/                     grid 编解码
+  models/                   XSD 生成的模型与辅助逻辑
+  pipeline/                 高层工作流
+  reference/                打包进库内的参考数据与 XSD
+  xsd_validation.py         XSD 校验入口
 ```
 
-### more
+## 开发说明
 
-[see examples](https://github.com/Josephinum-Research/isoxml-py/blob/main/examples)
+运行测试：
 
-The `examples/` directory now mainly contains:
-- demonstration scripts and notebooks
-- sample input/output data
-- themed example modules under subdirectories such as `application_maps/`, `guidance/`, and `partfields/`
+```bash
+uv run pytest
+```
 
-## 主要功能 | Main Features
+运行静态检查：
 
-### 1. ISOXML TaskData 处理
-- **版本支持**：完整支持 ISO11783-10 v3 和 v4 标准
-- **灵活的读写方式**：
-  - 从 ZIP 压缩包直接读取/写入
-  - 从 TASKDATA 目录读取/写入
-  - 从字符串读取/写入
-- **数据结构**：完整的 Python 类模型，类型安全
+```bash
+uv run ruff check
+```
 
-### 2. 应用图（处方图）生成
-支持三种类型的应用图生成，用于精准农业变量施用作业：
+如果你要重新生成基于 XSD 的 dataclass 模型，请先阅读：
 
-#### 矢量型应用图（Vector-based Application Map）
-- 基于多边形的处理区域定义
-- 适合少数处理区域（< 20个）
-- 每个区域独立设置施用参数
-- 示例：[app_map_vector.py](examples/application_maps/app_map_vector.py)
-
-#### 网格型 Type 1（Grid Type 1）
-- 使用查找表原理存储数据
-- 适合少数不同值的情况
-- 实际值存储在 XML 中
-- 示例：[app_map_grid_type_1.py](examples/application_maps/app_map_grid_type_1.py)
-
-#### 网格型 Type 2（Grid Type 2）
-- 数据直接编码为二进制文件
-- 适合大量连续变化的数值
-- XML文件保持较小（仅含缩放和偏移信息）
-- 示例：[app_map_grid_type_2.py](examples/application_maps/app_map_grid_type_2.py)
-
-📄 **详细比较**: [应用图类型对比文档](docs/application_map_types_comparison.md)
-
-### 3. 几何数据转换
-- **Shapely ↔ ISOXML**：在 Shapely 几何对象和 ISOXML 几何之间无缝转换
-- **支持的几何类型**：
-  - Point（点）
-  - LineString（线串）- 包括导航线
-  - Polygon（多边形）- 地块边界、处理区域
-- **坐标系统**：自动处理坐标转换（WGS84）
-
-### 4. 网格数据处理
-- **NumPy 数组转换**：将 NumPy 数组转换为 ISOXML 网格二进制文件
-- **支持类型**：Grid Type 1 和 Grid Type 2
-- **应用场景**：高分辨率处方图、土壤养分图
-
-### 5. 代码生成
-- 从现有 TASKDATA.XML 文件生成 Python 代码
-- 基于 xsdata 工具链
-- 便于学习和快速开发
-- CLI: `uv run isoxml-generate-pycode`
-
-### 6. 导航线和引导模式
-- AB线导航（A-B Guidance）
-- 曲线导航（Curve Guidance）
-- 支持引导模式参数设置（幅宽、传播方向等）
-- 示例：[guidance_pattern.py](examples/guidance/guidance_pattern.py)
-
-## 应用图类型比较 | Application Map Type Comparison
-
-| 特性 | 矢量型 | 网格型 Type 1 | 网格型 Type 2 |
-|------|--------|--------------|--------------|
-| **数据结构** | 多边形 | 网格 + 查找表 | 网格 + 直接编码 |
-| **适用场景** | 少数区域 | 少数不同值 | 大量连续值 |
-| **XML大小** | 中等 | 可能很大 | 较小 |
-| **典型应用** | 分区施肥 | 等级施用 | 变量施肥 |
-
-### 选择建议：
-- **矢量型**：适合有明确边界的少数区域，如基于土壤类型的分区管理
-- **Type 1**：适合固定等级的施用策略（低/中/高），如简单的分级施肥
-- **Type 2**：适合基于遥感数据的高分辨率连续变量施用
-
-详细说明请参阅：[应用图类型完整对比](docs/application_map_types_comparison.md)
-
-## 硬件测试案例 | Hardware Test Cases
-
-本库已在以下实际农业机械设备上测试验证：
-
-### ✅ 矢量型应用图（Vector Application Map）
-- **设备**：New Holland T7 + IntelliView 12 + Kverneland iXter B18
-- **状态**：成功导入和显示
-- **备注**：终端无法选择 DDI（需在生成时预设）
-
-### ✅ 网格型 Type 2
-- **设备 1**：Deutz-Fahr 6140.4 + Bogballe L20W
-  - **状态**：成功导入和显示
-- **设备 2**：New Holland T7 + IntelliView 12 + Kverneland iXter B18
-  - **状态**：可导入和显示
-  - **限制**：任务控制器（TC）不接受设定值
-
-### 关键术语说明
-- **DDI (Data Dictionary Item)**：数据字典项，定义数据类型（如施肥量、播种量等）
-- **TC (Task Controller)**：任务控制器，农机上的 ISOBUS 控制单元
-- **FMIS (Farm Management Information System)**：农场管理信息系统
-
-## Dependencies
-
-* [xsdata](https://github.com/tefra/xsdata) - Naive XML Bindings for python.
-* [shapely](https://github.com/shapely/shapely) - a widely used library for editing and analyzing geometric objects.
-* [numpy](https://github.com/numpy/numpy) - you know it, you love it
+- [src/isoxml/models/README.md](src/isoxml/models/README.md)
+- [src/isoxml/reference/xsd/README.md](src/isoxml/reference/xsd/README.md)
