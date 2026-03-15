@@ -1,7 +1,7 @@
 """
 Grid Type 2 application map example.
 
-Grid Type 2 encodes prescription values directly in a binary file as int32.
+Grid Type 2 encodes application values directly in a binary file as int32.
 The XML only holds scale/offset metadata. Best for many continuous values.
 """
 

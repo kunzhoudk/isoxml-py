@@ -18,7 +18,7 @@ from isoxml.pipeline.shp_to_grid.types import ShpToGridOptions, ShpToGridResult
 
 
 def convert(options: ShpToGridOptions) -> ShpToGridResult:
-    """Build ISOXML task data and binary grid from a prescription shapefile."""
+    """Build ISOXML task data and binary grid from an application-map shapefile."""
     if not options.shp_path.exists():
         raise FileNotFoundError(f"Shapefile not found: {options.shp_path}")
     if options.boundary_shp is None:
@@ -61,7 +61,7 @@ def convert(options: ShpToGridOptions) -> ShpToGridResult:
     if boundary_metric.is_empty:
         raise ValueError("Boundary geometry is empty after projection.")
     if rx_metric.is_empty:
-        raise ValueError("Prescription geometry is empty after projection.")
+        raise ValueError("Application-map geometry is empty after projection.")
 
     if options.grid_extent == "boundary":
         extent_metric = boundary_metric

@@ -1,4 +1,4 @@
-"""Version-to-version object tree conversion for prescription task data."""
+"""Version-to-version XML object-graph conversion for task data."""
 
 from __future__ import annotations
 
@@ -8,34 +8,7 @@ from typing import Any
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-
-_FIELD_RENAMES_TO_V4: dict[str, dict[str, str]] = {
-    "Customer": {"designator": "last_name"},
-    "Worker": {"designator": "last_name"},
-    "Device": {"working_set_master_name": "client_name"},
-    "DeviceAllocation": {
-        "working_set_master_name_value": "client_name_value",
-        "working_set_master_name_mask": "client_name_mask",
-    },
-    "ProductAllocation": {
-        "amount_ddi": "quantity_ddi",
-        "amount_value": "quantity_value",
-    },
-}
-
-_FIELD_RENAMES_TO_V3: dict[str, dict[str, str]] = {
-    "Customer": {"last_name": "designator"},
-    "Worker": {"last_name": "designator"},
-    "Device": {"client_name": "working_set_master_name"},
-    "DeviceAllocation": {
-        "client_name_value": "working_set_master_name_value",
-        "client_name_mask": "working_set_master_name_mask",
-    },
-    "ProductAllocation": {
-        "quantity_ddi": "amount_ddi",
-        "quantity_value": "amount_value",
-    },
-}
+from isoxml.pipeline.taskdata_version_converter.field_mappings import get_field_mapping
 
 
 def resolve_target_module(target_xml_version: int | str):
@@ -132,7 +105,15 @@ def _convert_dataclass(
         if not target_field.init:
             continue
 
-        source_field_name = _source_field_name(cls_name, target_field.name, target_iso)
+        mapping = get_field_mapping(cls_name, target_field.name, target_iso)
+        source_field_name = target_field.name
+        apply_transform = False
+        if mapping is not None:
+            mapped_source_name = mapping.source_field_for_target(target_iso)
+            if mapped_source_name in source_fields:
+                source_field_name = mapped_source_name
+                apply_transform = True
+
         if source_field_name not in source_fields:
             continue
 
@@ -143,48 +124,9 @@ def _convert_dataclass(
             enums,
         )
 
-        if cls_name == "Point" and target_field.name == "colour":
-            if target_iso is iso4 and isinstance(converted, int):
-                converted = str(converted)
-            elif target_iso is iso3 and isinstance(converted, str):
-                try:
-                    converted = int(converted)
-                except (TypeError, ValueError):
-                    converted = None
+        if apply_transform and mapping is not None:
+            converted = mapping.transform_for_target(converted, target_iso)
 
         kwargs[target_field.name] = converted
 
-    _patch_special_field_mappings(source_obj, kwargs, target_iso, classes, enums)
     return target_cls(**kwargs)
-
-
-def _source_field_name(cls_name: str, target_field_name: str, target_iso) -> str:
-    rename_map = _FIELD_RENAMES_TO_V4 if target_iso is iso4 else _FIELD_RENAMES_TO_V3
-    reverse_map = {
-        target_name: source_name
-        for source_name, target_name in rename_map.get(cls_name, {}).items()
-    }
-    return reverse_map.get(target_field_name, target_field_name)
-
-
-def _patch_special_field_mappings(
-    source_obj: Any,
-    kwargs: dict[str, Any],
-    target_iso,
-    classes: dict[str, type],
-    enums: dict[str, type[Enum]],
-) -> None:
-    cls_name = type(source_obj).__name__
-
-    if cls_name == "AllocationStamp":
-        if target_iso is iso4 and getattr(source_obj, "position", None) is not None:
-            kwargs["positions"] = [
-                _convert_value(source_obj.position, target_iso, classes, enums)
-            ]
-        elif target_iso is iso3 and getattr(source_obj, "positions", None):
-            kwargs["position"] = _convert_value(
-                source_obj.positions[0],
-                target_iso,
-                classes,
-                enums,
-            )

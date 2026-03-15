@@ -7,12 +7,12 @@ from pathlib import Path
 from isoxml.io import read_from_path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-FIXTURE_DIR = REPO_ROOT / "tests" / "resources" / "isoxml" / "prescription_converter"
+FIXTURE_DIR = REPO_ROOT / "tests" / "resources" / "isoxml" / "taskdata_version_converter"
 
 
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, "-m", "isoxml.cli.convert_prescription", *args],
+        [sys.executable, "-m", "isoxml.cli.convert_taskdata", *args],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -20,7 +20,7 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_convert_prescription_cli_run__when_valid_fixture__expect_converted_output_written(
+def test_convert_taskdata_cli_run__when_valid_fixture__expect_converted_output_written(
     tmp_path: Path,
 ):
     output_dir = tmp_path / "converted"

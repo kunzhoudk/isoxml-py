@@ -7,7 +7,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Editable parameters
 UV_BIN="uv"
-CLI_NAME="isoxml-shp-to-prescription"
+CLI_NAME="isoxml-shp-to-taskdata"
 SHP_PATH="${REPO_ROOT}/examples/input/small/shp/Rx.shp"
 BOUNDARY_SHP="${REPO_ROOT}/examples/input/small/boundary/Boundary.shp"
 XML_VERSION="4"

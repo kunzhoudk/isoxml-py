@@ -1,4 +1,4 @@
-"""CLI for converting polygon prescription shapefiles to ISOXML grids."""
+"""CLI for converting polygon application-map shapefiles to ISOXML task data."""
 
 from __future__ import annotations
 
@@ -13,14 +13,14 @@ from isoxml.pipeline.shp_to_grid import ShpToGridOptions, convert, validate_xsd
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     base_dir = Path(__file__).resolve().parents[3] / "examples"
     parser = argparse.ArgumentParser(
-        description="Convert a polygon prescription shapefile to an ISOXML grid map.",
+        description="Convert a polygon application-map shapefile to ISOXML task data.",
     )
     parser.add_argument(
         "shp_path",
         nargs="?",
         type=Path,
         default=base_dir / "input" / "small" / "shp" / "Rx.shp",
-        help="Prescription shapefile (.shp).",
+        help="Application-map shapefile (.shp).",
     )
     parser.add_argument(
         "--boundary-shp",
@@ -32,7 +32,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--value-field",
         type=str,
         default=None,
-        help="Numeric attribute used as prescription value (auto-detected if omitted).",
+        help="Numeric attribute used as target-rate value (auto-detected if omitted).",
     )
     parser.add_argument(
         "--ddi",

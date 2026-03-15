@@ -1,4 +1,4 @@
-"""CLI for inspecting shapefiles used in prescription generation."""
+"""CLI for inspecting shapefiles used in task-data generation."""
 
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ def inspect(shp_path: Path) -> None:
         print("  No numeric fields found.")
     print()
 
-    print("--- Candidate fields for prescription map ---")
+    print("--- Candidate fields for application map ---")
     dose_candidates = [
         col
         for col in numeric_cols
@@ -74,7 +74,7 @@ def inspect(shp_path: Path) -> None:
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     default_path = Path(__file__).resolve().parents[3] / "examples" / "input" / "small" / "shp" / "Rx.shp"
-    parser = argparse.ArgumentParser(description="Inspect a shapefile for prescription map generation.")
+    parser = argparse.ArgumentParser(description="Inspect a shapefile for application-map generation.")
     parser.add_argument(
         "shp_path",
         nargs="?",

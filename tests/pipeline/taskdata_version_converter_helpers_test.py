@@ -6,11 +6,11 @@ from xsdata.models.datatype import XmlDateTime
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml.pipeline.prescription_converter.grid import (
+from isoxml.pipeline.taskdata_version_converter.grid import (
     convert_task_grids,
     normalize_grid_type,
 )
-from isoxml.pipeline.prescription_converter.tree import (
+from isoxml.pipeline.taskdata_version_converter.xml_object_graph import (
     convert_reference,
     convert_tree,
     resolve_target_module,

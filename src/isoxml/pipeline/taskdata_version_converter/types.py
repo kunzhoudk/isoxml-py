@@ -1,4 +1,4 @@
-"""Shared types for prescription conversion."""
+"""Shared types for task-data version conversion."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _PDV = iso3.ProcessDataVariable | iso4.ProcessDataVariable
 
 
 @dataclass
-class GridPrescriptionConversionResult:
+class TaskDataVersionConversionResult:
     """Converted task data and its associated binary/external references."""
 
     task_data: _TaskData

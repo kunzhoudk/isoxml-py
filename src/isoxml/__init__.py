@@ -29,9 +29,9 @@ Shapefile → grid pipeline::
 
     from isoxml.pipeline import ShpToGridOptions, convert
 
-Prescription conversion::
+Task-data version conversion::
 
-    from isoxml import convert_grid_prescriptions
+    from isoxml import convert_taskdata_versions
 """
 
 # I/O
@@ -48,11 +48,11 @@ from isoxml.io import (
 # Geometry converters
 from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
 
-# High-level prescription conversion
+# High-level task-data version conversion
 from isoxml.pipeline import (
-    GridPrescriptionConversionResult,
-    convert_grid_prescriptions,
-    validate_prescription_xsd,
+    TaskDataVersionConversionResult,
+    convert_taskdata_versions,
+    validate_taskdata_xsd,
 )
 from isoxml.xsd_validation import validate_xsd
 
@@ -79,9 +79,9 @@ __all__ = [
     "encode_type1",
     "encode_type2",
     "decode",
-    "GridPrescriptionConversionResult",
-    "convert_grid_prescriptions",
-    "validate_prescription_xsd",
+    "TaskDataVersionConversionResult",
+    "convert_taskdata_versions",
+    "validate_taskdata_xsd",
     "validate_xsd",
     # Models
     "DDEntity",

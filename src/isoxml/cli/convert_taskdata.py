@@ -1,4 +1,4 @@
-"""CLI for converting ISOXML prescription packages."""
+"""CLI for converting ISOXML task-data packages."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import Sequence
 
 from isoxml.io import read_from_path, read_from_zip, write_to_dir, write_to_zip
-from isoxml.pipeline import convert_grid_prescriptions
+from isoxml.pipeline import convert_taskdata_versions
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Convert ISOXML prescription grids between XML versions and grid types."
+        description="Convert ISOXML task-data grids between XML versions and grid types."
     )
     parser.add_argument("source", type=Path, help="Input ISOXML folder or ZIP archive.")
     parser.add_argument("--target-xml-version", required=True, choices=["3", "4"])
@@ -37,7 +37,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     else:
         task_data, refs = read_from_path(args.source)
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=args.target_xml_version,

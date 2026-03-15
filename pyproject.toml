@@ -32,12 +32,12 @@ Homepage = "https://github.com/kunzhoudk/isoxml-py"
 Issues = "https://github.com/kunzhoudk/isoxml-py/issues"
 
 [project.scripts]
-isoxml-convert-prescription = "isoxml.cli.convert_prescription:main"
+isoxml-convert-taskdata = "isoxml.cli.convert_taskdata:main"
 isoxml-inspect-grid-overlay = "isoxml.cli.inspect_grid_overlay:main"
 isoxml-generate-pycode = "isoxml.cli.generate_pycode:main"
 isoxml-inspect-shapefile = "isoxml.cli.inspect_shapefile:main"
 isoxml-inspect-grid = "isoxml.cli.inspect_grid:main"
-isoxml-shp-to-prescription = "isoxml.cli.shp_to_prescription:main"
+isoxml-shp-to-taskdata = "isoxml.cli.shp_to_taskdata:main"
 isoxml-validate-taskdata = "isoxml.cli.validate_taskdata:main"
 isoxml-validate-grid-bin = "isoxml.cli.validate_grid_bin:main"
 

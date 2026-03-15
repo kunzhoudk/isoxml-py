@@ -15,8 +15,8 @@ pip install .[dev]
 If you want stable command-line entry points, prefer the CLI commands instead of calling files in `examples/` directly:
 
 ```bash
-uv run isoxml-shp-to-prescription --help
-uv run isoxml-convert-prescription --help
+uv run isoxml-shp-to-taskdata --help
+uv run isoxml-convert-taskdata --help
 uv run isoxml-inspect-grid-overlay --help
 uv run isoxml-inspect-shapefile --help
 uv run isoxml-validate-grid-bin --help

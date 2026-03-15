@@ -25,8 +25,8 @@ The `examples/` directory contains themed demos, notebooks, and sample data.
 Available commands:
 
 ```bash
-uv run isoxml-shp-to-prescription --help
-uv run isoxml-convert-prescription --help
+uv run isoxml-shp-to-taskdata --help
+uv run isoxml-convert-taskdata --help
 uv run isoxml-inspect-grid-overlay --help
 uv run isoxml-inspect-shapefile --help
 uv run isoxml-validate-grid-bin --help
@@ -38,13 +38,13 @@ uv run isoxml-generate-pycode --help
 Typical examples:
 
 ```bash
-uv run isoxml-shp-to-prescription examples/input/small/shp/Rx.shp \
+uv run isoxml-shp-to-taskdata examples/input/small/shp/Rx.shp \
   --boundary-shp examples/input/small/boundary/Boundary.shp \
   --xml-version 4 \
   --grid-type 2 \
   --output-dir examples/output/rx_grid
 
-uv run isoxml-convert-prescription examples/expected/small_xml_v3_type_1_auto.zip \
+uv run isoxml-convert-taskdata examples/expected/small_xml_v3_type_1_auto.zip \
   --target-xml-version 4 \
   --target-grid-type 2 \
   --output-dir examples/output/converted_v4_type_2

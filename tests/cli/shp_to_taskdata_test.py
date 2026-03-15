@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, "-m", "isoxml.cli.shp_to_prescription", *args],
+        [sys.executable, "-m", "isoxml.cli.shp_to_taskdata", *args],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,

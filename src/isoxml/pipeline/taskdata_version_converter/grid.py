@@ -1,4 +1,4 @@
-"""Grid binary conversion helpers for prescription conversion."""
+"""Grid binary conversion helpers for task-data version conversion."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Any
 
 import numpy as np
 
-from isoxml.pipeline.prescription_converter.types import _Grid, _PDV, _Task, _TaskData, _TZN
+from isoxml.pipeline.taskdata_version_converter.types import _Grid, _PDV, _Task, _TaskData, _TZN
 
 
 def normalize_grid_type(target_grid_type: int | str) -> int:

@@ -10,10 +10,10 @@ from xsdata.models.datatype import XmlDateTime
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.io import read_from_path
-from isoxml.pipeline import convert_grid_prescriptions
+from isoxml.pipeline import convert_taskdata_versions
 
 DDI_6 = b"\x00\x06"
-FIXTURE_DIR = Path(__file__).resolve().parents[1] / "resources" / "isoxml" / "prescription_converter"
+FIXTURE_DIR = Path(__file__).resolve().parents[1] / "resources" / "isoxml" / "taskdata_version_converter"
 FIXTURE_NAMES = [
     "small_xml_v3_type_1_auto.zip",
     "small_xml_v3_type_2_auto.zip",
@@ -151,7 +151,7 @@ def _make_v3_metadata_case():
 def test_convert_v3_type1_to_v4_type1():
     task_data, refs = _make_v3_type1_case()
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=4,
@@ -168,7 +168,7 @@ def test_convert_v3_type1_to_v4_type1():
 def test_convert_v3_type1_to_v4_type2():
     task_data, refs = _make_v3_type1_case()
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=4,
@@ -187,7 +187,7 @@ def test_convert_v3_type1_to_v4_type2():
 def test_convert_v4_type2_to_v3_type2():
     task_data, refs = _make_v4_type2_case()
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version="3",
@@ -204,7 +204,7 @@ def test_convert_v4_type2_to_v3_type2():
 def test_convert_v4_type2_to_v3_type1():
     task_data, refs = _make_v4_type2_case()
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=3,
@@ -232,7 +232,7 @@ def test_convert_v4_type2_to_v3_type1():
 def test_convert_metadata_field_renames_between_versions():
     task_data = _make_v3_metadata_case()
 
-    v4_result = convert_grid_prescriptions(
+    v4_result = convert_taskdata_versions(
         task_data,
         {},
         target_xml_version=4,
@@ -248,7 +248,7 @@ def test_convert_metadata_field_renames_between_versions():
     assert v4_task_data.tasks[0].product_allocations[0].quantity_value == 123
     assert len(v4_task_data.tasks[0].device_allocations[0].allocation_stamp.positions) == 1
 
-    v3_roundtrip = convert_grid_prescriptions(
+    v3_roundtrip = convert_taskdata_versions(
         v4_task_data,
         {},
         target_xml_version=3,
@@ -304,7 +304,7 @@ def _materialize_pdv_values(task_data, refs) -> np.ndarray:
     ("target_xml_version", "target_grid_type"),
     [(3, 1), (3, 2), (4, 1), (4, 2)],
 )
-def test_convert_real_zip_fixtures_preserves_prescription_values(
+def test_convert_real_zip_fixtures_preserves_taskdata_values(
         fixture_name: str,
         target_xml_version: int,
         target_grid_type: int,
@@ -312,7 +312,7 @@ def test_convert_real_zip_fixtures_preserves_prescription_values(
     task_data, refs = _load_zip_fixture(fixture_name)
     expected_values = _materialize_pdv_values(task_data, refs)
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=target_xml_version,
@@ -330,7 +330,7 @@ def test_convert_real_zip_fixtures_preserves_prescription_values(
 def test_convert_with_xsd_validation_returns_schema_path():
     task_data, refs = _make_v3_type1_case()
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=4,
@@ -345,7 +345,7 @@ def test_convert_with_xsd_validation_returns_schema_path():
 def test_convert_real_fixture_with_xsd_validation_returns_schema_path():
     task_data, refs = _load_zip_fixture("small_xml_v3_type_1_auto.zip")
 
-    result = convert_grid_prescriptions(
+    result = convert_taskdata_versions(
         task_data,
         refs,
         target_xml_version=4,

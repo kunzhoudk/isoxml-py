@@ -68,7 +68,7 @@ def rasterize(
     grid_bounds: tuple[float, float, float, float],
     boundary_mask: str,
 ) -> tuple[np.ndarray, np.ndarray, float, float, int, int]:
-    """Rasterize prescription polygons onto a regular grid."""
+    """Rasterize application-map polygons onto a regular grid."""
     if rows <= 0 or cols <= 0:
         raise ValueError("Grid rows/cols must be > 0.")
     if boundary_mask not in {"center", "strict", "touch"}:
