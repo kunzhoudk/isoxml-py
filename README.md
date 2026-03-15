@@ -15,10 +15,7 @@ The main features:
 pip install isoxml
 ```
 
-For shapefile → grid conversion (optional):
-```
-pip install isoxml[pipeline]
-```
+Shapefile and XSD features are included in the base install.
 
 ## Command Line Tools
 

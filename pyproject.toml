@@ -23,6 +23,8 @@ dependencies = [
     "xsdata >= 24.7",
     "numpy >= 1.26",
     "shapely >= 2.0",
+    "geopandas",
+    "xmlschema",
 ]
 
 [project.urls]
@@ -40,11 +42,6 @@ isoxml-validate-taskdata = "isoxml.cli.validate_taskdata:main"
 isoxml-validate-grid-bin = "isoxml.cli.validate_grid_bin:main"
 
 [project.optional-dependencies]
-# Pipeline extra: shapefile → ISOXML grid conversion
-pipeline = [
-    "geopandas",
-    "xmlschema",
-]
 # Visualisation / notebook extras (not needed at runtime)
 viz = [
     "jupyter",
@@ -58,11 +55,10 @@ codegen = [
 ]
 # Everything for active development
 dev = [
-    "isoxml[pipeline,viz,codegen]",
+    "isoxml[viz,codegen]",
 ]
 test = [
     "pytest",
-    "xmlschema",
 ]
 
 

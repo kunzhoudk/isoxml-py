@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import math
 
+import geopandas as gpd
 import shapely as shp
 
-from isoxml._optional_deps import require_geopandas
 from isoxml.pipeline.shp_to_grid.geometry import (
     ensure_polygon_gdf,
     rasterize,
@@ -19,8 +19,6 @@ from isoxml.pipeline.shp_to_grid.types import ShpToGridOptions, ShpToGridResult
 
 def convert(options: ShpToGridOptions) -> ShpToGridResult:
     """Build ISOXML task data and binary grid from a prescription shapefile."""
-    gpd = require_geopandas()
-
     if not options.shp_path.exists():
         raise FileNotFoundError(f"Shapefile not found: {options.shp_path}")
     if options.boundary_shp is None:

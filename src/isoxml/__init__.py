@@ -25,7 +25,7 @@ ISOBUS Data Dictionary::
     from isoxml import DDEntity
     # or: from isoxml.models import DDEntity
 
-Shapefile → grid pipeline (requires geopandas; install with ``pip install isoxml[pipeline]``)::
+Shapefile → grid pipeline::
 
     from isoxml.pipeline import ShpToGridOptions, convert
 

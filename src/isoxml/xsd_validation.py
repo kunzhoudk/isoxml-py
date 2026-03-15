@@ -8,7 +8,7 @@ from typing import Final
 
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
-from isoxml._optional_deps import require_xmlschema
+import xmlschema
 from isoxml.io.writer import to_xml
 
 TaskData = iso3.Iso11783TaskData | iso4.Iso11783TaskData
@@ -26,7 +26,6 @@ def validate_xsd(
     version = resolve_xml_version(task_data, xml_version)
     schema_ref = resolve_taskdata_schema(version)
 
-    xmlschema = require_xmlschema()
     with resources.as_file(schema_ref) as schema_path:
         xmlschema.validate(to_xml(task_data), schema_path)
 
