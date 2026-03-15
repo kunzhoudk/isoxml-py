@@ -101,6 +101,13 @@ uv run pytest
 uv run ruff check
 ```
 
+统一代码格式：
+
+```bash
+uv run ruff format
+uv run ruff check --fix
+```
+
 如果你只是作为库使用者，把它安装到你自己的项目里，那么 `pip install isoxml` 也完全可以。
 
 ## 快速开始
