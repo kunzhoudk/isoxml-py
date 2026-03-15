@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
 from isoxml.io import read_from_path
-from isoxml.validation import validate_xsd
+from isoxml.xsd_validation import validate_xsd
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "resources" / "isoxml" / "prescription_converter"
 

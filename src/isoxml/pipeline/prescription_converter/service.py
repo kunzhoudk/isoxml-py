@@ -17,7 +17,7 @@ from isoxml.pipeline.prescription_converter.types import (
     GridPrescriptionConversionResult,
     _TaskData,
 )
-from isoxml.validation import validate_xsd
+from isoxml.xsd_validation import validate_xsd
 
 
 def convert_grid_prescriptions(

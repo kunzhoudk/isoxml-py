@@ -8,7 +8,7 @@ via `importlib.resources`, without depending on an external checkout-time
 They are used in three two places:
 
 1. Runtime XSD validation
-   - `src/isoxml/validation.py` resolves the correct `ISO11783_TaskFile_V*-3.xsd`
+   - `src/isoxml/xsd_validation.py` resolves the correct `ISO11783_TaskFile_V*-3.xsd`
      file from this directory and passes it to `xmlschema.validate(...)`.
    - This is used by public APIs and CLIs such as `validate_xsd(...)`,
      `isoxml-validate-taskdata`, `isoxml-shp-to-prescription`, and the

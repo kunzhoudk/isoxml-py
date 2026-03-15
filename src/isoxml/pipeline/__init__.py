@@ -6,7 +6,7 @@ from isoxml.pipeline.prescription_converter import (
     validate_prescription_xsd,
 )
 from isoxml.pipeline.shp_to_grid import ShpToGridOptions, ShpToGridResult, convert
-from isoxml.validation import validate_xsd
+from isoxml.xsd_validation import validate_xsd
 
 __all__ = [
     "ShpToGridOptions",
