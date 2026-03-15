@@ -47,7 +47,7 @@ uv run isoxml-shp-to-prescription examples/input/small/shp/Rx.shp \
   --grid-type 2 \
   --output-dir examples/output/rx_grid
 
-uv run isoxml-convert-prescription examples/output/small_xml_v3_type_1_auto.zip \
+uv run isoxml-convert-prescription examples/expected/small_xml_v3_type_1_auto.zip \
   --target-xml-version 4 \
   --target-grid-type 2 \
   --output-dir examples/output/converted_v4_type_2

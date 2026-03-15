@@ -8,14 +8,14 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 # Editable parameters
 UV_BIN="uv"
 CLI_NAME="isoxml-inspect-grid-overlay"
-SOURCE="${REPO_ROOT}/examples/output/big_xml_v3_auto"
+SOURCE="${REPO_ROOT}/examples/output/big_xml_v3_type_1_auto"
 SHP_PATH="${REPO_ROOT}/examples/input/big/shp/Rx.shp"
 TASK_INDEX="0"
 GRID_INDEX="0"
 DDI="6"
 SHOW_ZERO="true"
-OUTPUT_PNG="${REPO_ROOT}/examples/output/big_xml_v3_auto/overlay_check.png"
-OUTPUT_GEOJSON="${REPO_ROOT}/examples/output/big_xml_v3_auto/grid_cells.geojson"
+OUTPUT_PNG="${REPO_ROOT}/examples/output/big_xml_v3_type_1_auto/overlay_check.png"
+OUTPUT_GEOJSON="${REPO_ROOT}/examples/output/big_xml_v3_type_1_auto/grid_cells.geojson"
 
 CMD=(
   "${UV_BIN}" run "${CLI_NAME}"

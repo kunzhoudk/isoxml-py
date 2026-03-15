@@ -1,6 +1,7 @@
 import os
 import tempfile
 from decimal import Decimal
+from importlib import resources
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
@@ -11,7 +12,6 @@ import xmlschema
 import isoxml.models.base.v4 as iso4
 from isoxml.io.writer import to_xml, write_to_dir, write_to_zip
 from isoxml.models.ddi import DDEntity
-from resources.resources import RES_DIR
 
 
 @pytest.fixture()
@@ -56,7 +56,9 @@ def task_with_grid():
 def test__to_xml__when_valid_task_data__expect_valid_xml(task_with_grid):
     task_data, _ = task_with_grid
     xml = to_xml(task_data)
-    xmlschema.validate(xml, RES_DIR / "xsd/ISO11783_TaskFile_V4-3.xsd")
+    xsd_ref = resources.files("isoxml.data.xsd").joinpath("ISO11783_TaskFile_V4-3.xsd")
+    with resources.as_file(xsd_ref) as xsd_path:
+        xmlschema.validate(xml, xsd_path)
 
 
 def test__write_to_dir__when_valid__expect_files_created(task_with_grid):

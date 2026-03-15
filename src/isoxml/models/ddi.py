@@ -7,9 +7,8 @@ Each entry carries a name, physical unit, and bit resolution (scale factor).
 Full registry: https://www.isobus.net/isobus/dDEntity
 
 How to refresh ``ddi_entities.json``:
-1. ``cd resources/ddi_update``
-2. ``python ddi_entities_updater.py``
-3. ``cp ddi_entities.json ../../src/isoxml/data/ddi_entities.json``
+1. ``python -m isoxml.data.update_ddi_registry``
+2. Commit the updated ``src/isoxml/data/ddi_entities.json``
 """
 
 import json

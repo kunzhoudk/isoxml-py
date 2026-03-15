@@ -31,5 +31,6 @@ Current rough split:
 - `partfields/`: partfield export demos
 - `partfield_viewer.ipynb`: interactive partfield viewer
 - `grid_overlay_viewer.ipynb`: interactive grid/partfield overlay viewer
-- `input/`, `output/`: sample data and generated artifacts
-
+- `input/`: source sample data
+- `expected/`: fixed example outputs kept in git for docs and notebooks
+- `output/`: local runtime output from scripts and CLI commands
