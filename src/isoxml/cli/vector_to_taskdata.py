@@ -1,4 +1,4 @@
-"""CLI for converting polygon application-map shapefiles to ISOXML task data."""
+"""CLI for converting polygon application-map vector files to ISOXML task data."""
 
 from __future__ import annotations
 
@@ -7,26 +7,31 @@ from pathlib import Path
 from typing import Sequence
 
 from isoxml.cli._common import write_taskdata_bundle
-from isoxml.pipeline.shp_to_taskdata import ShpToTaskDataOptions, convert, validate_xsd
+from isoxml.pipeline.vector_to_taskdata import (
+    VectorToTaskDataOptions,
+    convert,
+    validate_xsd,
+)
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     base_dir = Path(__file__).resolve().parents[3] / "examples"
     parser = argparse.ArgumentParser(
-        description="Convert a polygon application-map shapefile to ISOXML task data.",
+        description="Convert a polygon application-map vector file to ISOXML task data.",
     )
     parser.add_argument(
-        "shp_path",
+        "source_path",
         nargs="?",
         type=Path,
         default=base_dir / "input" / "small" / "shp" / "Rx.shp",
-        help="Application-map shapefile (.shp).",
+        help="Application-map vector file (.shp, .geojson, .gpkg, ...).",
     )
     parser.add_argument(
-        "--boundary-shp",
+        "--boundary-path",
+        dest="boundary_path",
         type=Path,
         default=None,
-        help="Boundary shapefile for partfield geometry.",
+        help="Boundary vector file for partfield geometry. Optional if the input contains one boundary feature.",
     )
     parser.add_argument(
         "--value-field",
@@ -44,7 +49,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--value-unit",
         choices=["auto", "ddi", "kg/ha"],
         default="auto",
-        help="Unit of the value field. 'auto' reads from shapefile; 'ddi' means already in DDI base unit.",
+        help="Unit of the value field. 'auto' reads from vector attributes; 'ddi' means already in DDI base unit.",
     )
     parser.add_argument(
         "--grid-type",
@@ -121,8 +126,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
 
-    options = ShpToTaskDataOptions(
-        shp_path=args.shp_path,
+    options = VectorToTaskDataOptions(
+        source_path=args.source_path,
         value_field=args.value_field,
         ddi=args.ddi,
         value_unit=args.value_unit,
@@ -133,7 +138,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         grid_extent=args.grid_extent,
         input_crs=args.input_crs,
         partfield_name=args.partfield_name,
-        boundary_shp=args.boundary_shp,
+        boundary_path=args.boundary_path,
         software_manufacturer=args.software_manufacturer,
         software_version=args.software_version,
     )
@@ -153,8 +158,8 @@ def main(argv: Sequence[str] | None = None) -> None:
 
     grid = result.task_data.tasks[0].grids[0]
     print("ISOXML conversion complete")
-    print(f"  input:       {args.shp_path}")
-    print(f"  boundary:    {args.boundary_shp}")
+    print(f"  input:       {args.source_path}")
+    print(f"  boundary:    {args.boundary_path}")
     print(f"  xml version: {args.xml_version}")
     print(f"  grid type:   {args.grid_type}")
     print(f"  value field: {result.value_field}")

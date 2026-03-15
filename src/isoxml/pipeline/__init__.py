@@ -5,12 +5,16 @@ from isoxml.pipeline.taskdata_version_converter import (
     convert_taskdata_versions,
     validate_taskdata_xsd,
 )
-from isoxml.pipeline.shp_to_taskdata import ShpToTaskDataOptions, ShpToTaskDataResult, convert
+from isoxml.pipeline.vector_to_taskdata import (
+    VectorToTaskDataOptions,
+    VectorToTaskDataResult,
+    convert,
+)
 from isoxml.xsd_validation import validate_xsd
 
 __all__ = [
-    "ShpToTaskDataOptions",
-    "ShpToTaskDataResult",
+    "VectorToTaskDataOptions",
+    "VectorToTaskDataResult",
     "TaskDataVersionConversionResult",
     "convert",
     "convert_taskdata_versions",

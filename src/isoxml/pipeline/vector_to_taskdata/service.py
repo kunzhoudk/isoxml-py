@@ -1,49 +1,46 @@
-"""Orchestration entry point for the shapefile-to-taskdata pipeline."""
+"""Orchestration entry point for the vector-to-taskdata pipeline."""
 
 from __future__ import annotations
 
 import math
 
-import geopandas as gpd
 import shapely as shp
 
-from isoxml.pipeline.shp_to_taskdata.geometry import (
+from isoxml.pipeline.vector_to_taskdata.geometry import (
     ensure_polygon_gdf,
     rasterize,
     resolve_value_field,
+    split_embedded_boundary,
 )
-from isoxml.pipeline.shp_to_taskdata.inputs import resolve_value_unit
-from isoxml.pipeline.shp_to_taskdata.taskdata import build_result
-from isoxml.pipeline.shp_to_taskdata.types import ShpToTaskDataOptions, ShpToTaskDataResult
+from isoxml.pipeline.vector_to_taskdata.inputs import load_vector_gdf, resolve_value_unit
+from isoxml.pipeline.vector_to_taskdata.taskdata import build_result
+from isoxml.pipeline.vector_to_taskdata.types import (
+    VectorToTaskDataOptions,
+    VectorToTaskDataResult,
+)
 
 
-def convert(options: ShpToTaskDataOptions) -> ShpToTaskDataResult:
-    """Build ISOXML task data and binary grid from an application-map shapefile."""
-    if not options.shp_path.exists():
-        raise FileNotFoundError(f"Shapefile not found: {options.shp_path}")
-    if options.boundary_shp is None:
-        raise ValueError("boundary_shp is required.")
-    if not options.boundary_shp.exists():
-        raise FileNotFoundError(f"Boundary shapefile not found: {options.boundary_shp}")
+def convert(options: VectorToTaskDataOptions) -> VectorToTaskDataResult:
+    """Build ISOXML task data and binary grid from an application-map vector file."""
+    gdf = ensure_polygon_gdf(
+        load_vector_gdf(options.source_path, input_crs=options.input_crs, label="Input")
+    )
+    if options.boundary_path is None:
+        gdf, gdf_boundary = split_embedded_boundary(
+            gdf,
+            requested_value_field=options.value_field,
+        )
+    else:
+        gdf_boundary = ensure_polygon_gdf(
+            load_vector_gdf(
+                options.boundary_path,
+                input_crs=options.input_crs,
+                label="Boundary",
+            )
+        )
 
-    gdf = gpd.read_file(options.shp_path)
-    if gdf.crs is None:
-        if options.input_crs:
-            gdf = gdf.set_crs(options.input_crs)
-        else:
-            raise ValueError("Input shapefile has no CRS. Provide input_crs.")
-
-    gdf = ensure_polygon_gdf(gdf)
     value_field = resolve_value_field(gdf, options.value_field)
     effective_unit, unit_source = resolve_value_unit(gdf, options.value_unit, value_field)
-
-    gdf_boundary = gpd.read_file(options.boundary_shp)
-    if gdf_boundary.crs is None:
-        if options.input_crs:
-            gdf_boundary = gdf_boundary.set_crs(options.input_crs)
-        else:
-            raise ValueError("Boundary shapefile has no CRS. Provide input_crs.")
-    gdf_boundary = ensure_polygon_gdf(gdf_boundary)
 
     gdf_wgs84 = gdf.to_crs("EPSG:4326")
     gdf_boundary_wgs84 = gdf_boundary.to_crs("EPSG:4326")

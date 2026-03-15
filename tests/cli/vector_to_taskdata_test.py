@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, "-m", "isoxml.cli.shp_to_taskdata", *args],
+        [sys.executable, "-m", "isoxml.cli.vector_to_taskdata", *args],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -21,7 +21,7 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess[str]:
 
 def test_cli_help__when_invoked__expect_expected_arguments_visible():
     proc = _run_cli("--help")
-    assert "--boundary-shp" in proc.stdout
+    assert "--boundary-path" in proc.stdout
     assert "--grid-type" in proc.stdout
     assert "--value-unit" in proc.stdout
 
@@ -32,7 +32,7 @@ def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(
 
     proc = _run_cli(
         "examples/input/small/shp/Rx.shp",
-        "--boundary-shp",
+        "--boundary-path",
         "examples/input/small/boundary/Boundary.shp",
         "--grid-type",
         "1",
@@ -52,6 +52,36 @@ def test_cli_run__when_small_sample_input__expect_outputs_created_and_parseable(
 
     task_data, refs = isoxml_from_path(output_dir)
     grid = task_data.tasks[0].grids[0]
+    assert int(grid.maximum_row) > 0
+    assert int(grid.maximum_column) > 0
+    assert grid.filename in refs
+
+
+def test_cli_run__when_geojson_with_embedded_boundary__expect_outputs_created_and_parseable(
+    tmp_path: Path,
+):
+    output_dir = tmp_path / "taskdata_geojson"
+
+    proc = _run_cli(
+        "examples/input/app_map_vector.geojson",
+        "--grid-type",
+        "1",
+        "--xml-version",
+        "4",
+        "--value-field",
+        "dose",
+        "--output-dir",
+        str(output_dir),
+        "--no-xsd-validate",
+    )
+
+    assert "ISOXML conversion complete" in proc.stdout
+    assert output_dir.joinpath("TASKDATA.XML").exists()
+    assert output_dir.joinpath("GRD00000.bin").exists()
+
+    task_data, refs = isoxml_from_path(output_dir)
+    grid = task_data.tasks[0].grids[0]
+    assert task_data.version_major.value == "4"
     assert int(grid.maximum_row) > 0
     assert int(grid.maximum_column) > 0
     assert grid.filename in refs

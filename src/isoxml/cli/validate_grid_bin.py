@@ -21,7 +21,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--task", type=int, default=0, help="Task index (default: 0).")
     parser.add_argument("--grid", type=int, default=0, help="Grid index within task (default: 0).")
     parser.add_argument("--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6).")
-    parser.add_argument("--shp", type=Path, default=None, help="Source shapefile for value comparison.")
+    parser.add_argument(
+        "--vector-path",
+        "--shp",
+        dest="vector_path",
+        type=Path,
+        default=None,
+        help="Source vector file for value comparison.",
+    )
     parser.add_argument("--value-field", type=str, default=None, help="Numeric field name in shapefile.")
     return parser.parse_args(argv)
 
@@ -58,12 +65,12 @@ def _check_type2(task, arr: np.ndarray, ddi: DDEntity) -> None:
         print(f"  note: {len(task.treatment_zones)} TZN entries (values are in .bin, not TZN)")
 
 
-def _compare_shapefile(shp_path: Path, value_field: str, arr: np.ndarray) -> None:
+def _compare_vector_file(source_path: Path, value_field: str, arr: np.ndarray) -> None:
     import geopandas as gpd
 
-    gdf = gpd.read_file(shp_path)
+    gdf = gpd.read_file(source_path)
     if value_field not in gdf.columns:
-        raise ValueError(f"Field '{value_field}' not found in {shp_path}")
+        raise ValueError(f"Field '{value_field}' not found in {source_path}")
     if not np.issubdtype(gdf[value_field].dtype, np.number):
         raise ValueError(f"Field '{value_field}' is not numeric.")
 
@@ -75,15 +82,15 @@ def _compare_shapefile(shp_path: Path, value_field: str, arr: np.ndarray) -> Non
     missing = [value for value in shp_nonzero if value not in set(grid_nonzero.tolist())]
     extra = [value for value in grid_nonzero if value not in set(shp_vals.tolist())]
 
-    print("Shapefile comparison")
-    print(f"  shp values:  {shp_vals.tolist()}")
+    print("Vector-file comparison")
+    print(f"  vector values: {shp_vals.tolist()}")
     print(f"  grid values: {grid_vals.tolist()}")
     if missing:
-        print(f"  WARN: shp values missing from grid (non-zero): {missing}")
+        print(f"  WARN: vector values missing from grid (non-zero): {missing}")
     else:
-        print("  OK: all shp values found in grid.")
+        print("  OK: all vector values found in grid.")
     if extra:
-        print(f"  WARN: grid has non-zero values not in shp: {extra}")
+        print(f"  WARN: grid has non-zero values not in vector input: {extra}")
     else:
         print("  OK: no unexpected non-zero grid values.")
 
@@ -132,10 +139,10 @@ def main(argv: Sequence[str] | None = None) -> None:
         _check_type2(task, arr, ddi)
         arr_for_compare = arr[:, :, 0] if arr.ndim == 3 and arr.shape[-1] == 1 else arr
 
-    if args.shp is not None:
+    if args.vector_path is not None:
         if args.value_field is None:
-            raise ValueError("--value-field is required when --shp is provided.")
-        _compare_shapefile(args.shp, args.value_field, arr_for_compare)
+            raise ValueError("--value-field is required when --vector-path is provided.")
+        _compare_vector_file(args.vector_path, args.value_field, arr_for_compare)
 
 
 if __name__ == "__main__":

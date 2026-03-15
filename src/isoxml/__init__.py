@@ -25,9 +25,9 @@ ISOBUS Data Dictionary::
     from isoxml import DDEntity
     # or: from isoxml.models import DDEntity
 
-Shapefile → task-data pipeline::
+Vector → task-data pipeline::
 
-    from isoxml.pipeline import ShpToTaskDataOptions, convert
+    from isoxml.pipeline import VectorToTaskDataOptions, convert
 
 Task-data version conversion::
 
@@ -50,8 +50,8 @@ from isoxml.geometry import ShapelyConverterV3, ShapelyConverterV4
 
 # High-level task-data version conversion
 from isoxml.pipeline import (
-    ShpToTaskDataOptions,
-    ShpToTaskDataResult,
+    VectorToTaskDataOptions,
+    VectorToTaskDataResult,
     TaskDataVersionConversionResult,
     convert_taskdata_versions,
     validate_taskdata_xsd,
@@ -76,8 +76,8 @@ __all__ = [
     # Geometry
     "ShapelyConverterV3",
     "ShapelyConverterV4",
-    "ShpToTaskDataOptions",
-    "ShpToTaskDataResult",
+    "VectorToTaskDataOptions",
+    "VectorToTaskDataResult",
     # Grid codec
     "encode",
     "encode_type1",

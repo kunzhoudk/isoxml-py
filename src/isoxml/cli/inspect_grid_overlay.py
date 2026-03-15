@@ -25,6 +25,11 @@ from isoxml.grid import decode
 from isoxml.models import DDEntity
 
 
+def load(source: Path):
+    """Backward-compatible wrapper used by notebooks and older examples."""
+    return load_taskdata_bundle(source)
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Overlay ISOXML grid on partfield boundary.")
     parser.add_argument("source", type=Path, help="TASKDATA directory or ZIP.")
@@ -46,7 +51,14 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--ddi", type=int, default=6, help="DDI for GridType2 decode (default: 6).")
     parser.add_argument("--show-zero", action="store_true", help="Include zero-value cells in plot.")
-    parser.add_argument("--shp", type=Path, default=None, help="Optional shapefile to overlay.")
+    parser.add_argument(
+        "--vector-path",
+        "--shp",
+        dest="vector_path",
+        type=Path,
+        default=None,
+        help="Optional vector file to overlay.",
+    )
     parser.add_argument("--out", type=Path, default=None, help="Output PNG path.")
     parser.add_argument("--cells-out", type=Path, default=None, help="Output GeoJSON for grid cells.")
     return parser.parse_args(argv)
@@ -180,8 +192,8 @@ def main(argv: Sequence[str] | None = None) -> None:
         gpd.GeoDataFrame(geometry=[partfield_geom], crs="EPSG:4326").boundary.plot(
             ax=ax, color="magenta", linewidth=2
         )
-    if args.shp is not None:
-        gpd.read_file(args.shp).to_crs("EPSG:4326").boundary.plot(
+    if args.vector_path is not None:
+        gpd.read_file(args.vector_path).to_crs("EPSG:4326").boundary.plot(
             ax=ax, color="cyan", linewidth=1
         )
     ax.set_title("ISOXML Grid Overlay Check")

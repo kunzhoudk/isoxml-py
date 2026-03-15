@@ -25,10 +25,10 @@ The `examples/` directory contains themed demos, notebooks, and sample data.
 Available commands:
 
 ```bash
-uv run isoxml-shp-to-taskdata --help
+uv run isoxml-vector-to-taskdata --help
 uv run isoxml-convert-taskdata --help
 uv run isoxml-inspect-grid-overlay --help
-uv run isoxml-inspect-shapefile --help
+uv run isoxml-inspect-vector --help
 uv run isoxml-validate-grid-bin --help
 uv run isoxml-inspect-grid --help
 uv run isoxml-validate-taskdata --help
@@ -38,8 +38,8 @@ uv run isoxml-generate-pycode --help
 Typical examples:
 
 ```bash
-uv run isoxml-shp-to-taskdata examples/input/small/shp/Rx.shp \
-  --boundary-shp examples/input/small/boundary/Boundary.shp \
+uv run isoxml-vector-to-taskdata examples/input/small/shp/Rx.shp \
+  --boundary-path examples/input/small/boundary/Boundary.shp \
   --xml-version 4 \
   --grid-type 2 \
   --output-dir examples/output/rx_grid

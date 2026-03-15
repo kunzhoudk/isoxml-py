@@ -1,4 +1,4 @@
-"""Geometry preparation and rasterisation helpers for shapefile conversion."""
+"""Geometry preparation and rasterisation helpers for vector-to-taskdata conversion."""
 
 from __future__ import annotations
 
@@ -9,10 +9,18 @@ from typing import TYPE_CHECKING
 import numpy as np
 import shapely as shp
 
-from isoxml.pipeline.shp_to_taskdata.inputs import trim
+from isoxml.pipeline.vector_to_taskdata.inputs import trim
 
 if TYPE_CHECKING:
     import geopandas as gpd
+
+_BOUNDARY_LABELS = {
+    "border",
+    "boundary",
+    "fieldboundary",
+    "partfieldboundary",
+    "fieldborder",
+}
 
 
 def iter_polygons(geom):
@@ -33,8 +41,50 @@ def ensure_polygon_gdf(gdf: "gpd.GeoDataFrame") -> "gpd.GeoDataFrame":
     gdf["geometry"] = [shp.unary_union(list(iter_polygons(g))) or None for g in gdf.geometry]
     gdf = gdf[gdf.geometry.notna() & ~gdf.geometry.is_empty].copy()
     if gdf.empty:
-        raise ValueError("No polygon geometry found in the shapefile.")
+        raise ValueError("No polygon geometry found in the vector input.")
     return gdf
+
+
+def _normalize_boundary_label(value: object) -> str | None:
+    if value is None:
+        return None
+    token = str(value).strip().lower().replace(" ", "").replace("_", "").replace("-", "")
+    return token or None
+
+
+def split_embedded_boundary(
+    gdf: "gpd.GeoDataFrame",
+    *,
+    requested_value_field: str | None = None,
+) -> tuple["gpd.GeoDataFrame", "gpd.GeoDataFrame"]:
+    """Split a single vector layer into application polygons and a boundary polygon."""
+    for col in gdf.columns:
+        if col == "geometry":
+            continue
+        if gdf[col].dtype != object:
+            continue
+        labels = gdf[col].map(_normalize_boundary_label)
+        mask = labels.isin(_BOUNDARY_LABELS)
+        if int(mask.sum()) == 1:
+            app_gdf = gdf.loc[~mask].copy()
+            boundary_gdf = gdf.loc[mask].copy()
+            if app_gdf.empty:
+                raise ValueError("Embedded boundary detection left no application-map features.")
+            return app_gdf, boundary_gdf
+
+    if requested_value_field and requested_value_field in gdf.columns:
+        mask = gdf[requested_value_field].isna()
+        if int(mask.sum()) == 1:
+            app_gdf = gdf.loc[~mask].copy()
+            boundary_gdf = gdf.loc[mask].copy()
+            if app_gdf.empty:
+                raise ValueError("Embedded boundary detection left no application-map features.")
+            return app_gdf, boundary_gdf
+
+    raise ValueError(
+        "boundary_path is required unless the input vector contains exactly one "
+        "boundary feature labelled 'border' or 'boundary'."
+    )
 
 
 def auto_value_field(gdf: "gpd.GeoDataFrame") -> str:
@@ -53,7 +103,7 @@ def resolve_value_field(gdf: "gpd.GeoDataFrame", requested: str | None) -> str:
     if requested is None:
         return auto_value_field(gdf)
     if requested not in gdf.columns:
-        raise ValueError(f"Field '{requested}' does not exist in the shapefile.")
+        raise ValueError(f"Field '{requested}' does not exist in the vector input.")
     if not np.issubdtype(gdf[requested].dtype, np.number):
         raise ValueError(f"Field '{requested}' is not numeric.")
     return requested
@@ -147,7 +197,7 @@ def rasterize(
 
 
 def infer_partfield_name(
-    gdf: "gpd.GeoDataFrame", shp_path: Path, explicit: str | None
+    gdf: "gpd.GeoDataFrame", source_path: Path, explicit: str | None
 ) -> str:
     if explicit:
         return trim(explicit, 32)
@@ -158,4 +208,4 @@ def infer_partfield_name(
             first = gdf[col].dropna()
             if not first.empty:
                 return trim(str(first.iloc[0]), 32)
-    return trim(shp_path.stem, 32)
+    return trim(source_path.stem, 32)

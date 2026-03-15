@@ -1,4 +1,4 @@
-"""ISOXML object-graph building for shapefile conversion."""
+"""ISOXML object-graph building for vector-to-taskdata conversion."""
 
 from __future__ import annotations
 
@@ -13,9 +13,12 @@ import isoxml.models.base.v4 as iso4
 from isoxml.geometry.shapely import ShapelyConverterV3, ShapelyConverterV4
 from isoxml.grid.codec import encode_type1, encode_type2
 from isoxml.models.ddi import DDEntity
-from isoxml.pipeline.shp_to_taskdata.geometry import infer_partfield_name
-from isoxml.pipeline.shp_to_taskdata.inputs import trim, unit_factor_to_ddi
-from isoxml.pipeline.shp_to_taskdata.types import ShpToTaskDataOptions, ShpToTaskDataResult
+from isoxml.pipeline.vector_to_taskdata.geometry import infer_partfield_name
+from isoxml.pipeline.vector_to_taskdata.inputs import trim, unit_factor_to_ddi
+from isoxml.pipeline.vector_to_taskdata.types import (
+    VectorToTaskDataOptions,
+    VectorToTaskDataResult,
+)
 
 
 @dataclass(frozen=True)
@@ -60,7 +63,7 @@ def count_decimals(value: float, max_decimals: int = 7) -> int:
 
 
 def build_result(
-    options: ShpToTaskDataOptions,
+    options: VectorToTaskDataOptions,
     gdf_boundary_wgs84,
     boundary_metric: shp.Geometry,
     boundary_wgs84: shp.Geometry,
@@ -72,7 +75,7 @@ def build_result(
     value_field: str,
     effective_unit: str,
     unit_source: str,
-) -> ShpToTaskDataResult:
+) -> VectorToTaskDataResult:
     version_ctx = select_version_context(options.xml_version)
     iso_mod = version_ctx.iso_mod
     dd_entity = DDEntity.from_id(options.ddi)
@@ -111,7 +114,7 @@ def build_result(
     partfield = iso_mod.Partfield(
         id="PFD100",
         designator=infer_partfield_name(
-            gdf_boundary_wgs84, options.boundary_shp, options.partfield_name
+            gdf_boundary_wgs84, options.boundary_path or options.source_path, options.partfield_name
         ),
         area=int(round(boundary_metric.area)),
         customer_id_ref=customer.id,
@@ -187,7 +190,7 @@ def build_result(
 
     task = iso_mod.Task(
         id="TSK100",
-        designator=trim(f"grid{options.grid_type}_{options.shp_path.stem}", 32),
+        designator=trim(f"grid{options.grid_type}_{options.source_path.stem}", 32),
         status=version_ctx.task_status,
         grids=[grid],
         treatment_zones=treatment_zones,
@@ -210,7 +213,7 @@ def build_result(
         value_presentations=[value_presentation],
     )
 
-    return ShpToTaskDataResult(
+    return VectorToTaskDataResult(
         task_data=task_data,
         refs={grid.filename: grid_bin},
         value_field=value_field,

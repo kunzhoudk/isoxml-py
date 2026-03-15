@@ -1,4 +1,4 @@
-"""Shared public types for the shapefile-to-taskdata pipeline."""
+"""Shared public types for the vector-to-taskdata pipeline."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ import isoxml.models.base.v4 as iso4
 
 
 @dataclass(frozen=True)
-class ShpToTaskDataOptions:
-    """Conversion options for polygon shapefile to ISOXML task data."""
+class VectorToTaskDataOptions:
+    """Conversion options for polygon vector data to ISOXML task data."""
 
-    shp_path: Path
+    source_path: Path
     value_field: str | None = None
     ddi: int = 6
     value_unit: Literal["auto", "ddi", "kg/ha"] = "auto"
@@ -25,13 +25,13 @@ class ShpToTaskDataOptions:
     grid_extent: Literal["rx", "boundary", "union"] = "rx"
     input_crs: str | None = None
     partfield_name: str | None = None
-    boundary_shp: Path | None = None
+    boundary_path: Path | None = None
     software_manufacturer: str = "kz_isoxml"
     software_version: str = "0.1.0"
 
 
 @dataclass(frozen=True)
-class ShpToTaskDataResult:
+class VectorToTaskDataResult:
     """Result bundle produced by :func:`convert`."""
 
     task_data: iso.Iso11783TaskData | iso4.Iso11783TaskData

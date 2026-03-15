@@ -1,4 +1,4 @@
-"""CLI for inspecting shapefiles used in task-data generation."""
+"""CLI for inspecting vector files used in task-data generation."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from typing import Sequence
 import geopandas as gpd
 
 
-def inspect(shp_path: Path) -> None:
-    gdf = gpd.read_file(shp_path)
-    print(f"Inspecting: {shp_path}\n")
+def inspect(source_path: Path) -> None:
+    gdf = gpd.read_file(source_path)
+    print(f"Inspecting: {source_path}\n")
 
     print("--- Basic information ---")
     print(f"Features:       {len(gdf)}")
@@ -74,22 +74,22 @@ def inspect(shp_path: Path) -> None:
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     default_path = Path(__file__).resolve().parents[3] / "examples" / "input" / "small" / "shp" / "Rx.shp"
-    parser = argparse.ArgumentParser(description="Inspect a shapefile for application-map generation.")
+    parser = argparse.ArgumentParser(description="Inspect a vector file for application-map generation.")
     parser.add_argument(
-        "shp_path",
+        "source_path",
         nargs="?",
         type=Path,
         default=default_path,
-        help="Path to shapefile (.shp).",
+        help="Path to vector data (.shp, .geojson, .gpkg, ...).",
     )
     return parser.parse_args(argv)
 
 
 def main(argv: Sequence[str] | None = None) -> None:
     args = parse_args(argv)
-    if not args.shp_path.exists():
-        raise SystemExit(f"File not found: {args.shp_path}")
-    inspect(args.shp_path)
+    if not args.source_path.exists():
+        raise SystemExit(f"File not found: {args.source_path}")
+    inspect(args.source_path)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 # Editable parameters
 UV_BIN="uv"
-CLI_NAME="isoxml-shp-to-taskdata"
+CLI_NAME="isoxml-vector-to-taskdata"
 SHP_PATH="${REPO_ROOT}/examples/input/small/shp/Rx.shp"
 BOUNDARY_SHP="${REPO_ROOT}/examples/input/small/boundary/Boundary.shp"
 XML_VERSION="4"
@@ -23,7 +23,7 @@ OUTPUT_ZIP="${REPO_ROOT}/examples/output/${OUTPUT_BASENAME}.zip"
 CMD=(
   "${UV_BIN}" run "${CLI_NAME}"
   "${SHP_PATH}"
-  --boundary-shp "${BOUNDARY_SHP}"
+  --boundary-path "${BOUNDARY_SHP}"
   --xml-version "${XML_VERSION}"
   --grid-type "${GRID_TYPE}"
   --value-field "${VALUE_FIELD}"

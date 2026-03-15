@@ -11,7 +11,7 @@ They are used in three two places:
    - `src/isoxml/xsd_validation.py` resolves the correct `ISO11783_TaskFile_V*-3.xsd`
      file from this directory and passes it to `xmlschema.validate(...)`.
    - This is used by public APIs and CLIs such as `validate_xsd(...)`,
-     `isoxml-validate-taskdata`, `isoxml-shp-to-taskdata`, and the
+     `isoxml-validate-taskdata`, `isoxml-vector-to-taskdata`, and the
      task-data version conversion pipeline.
 
 2. Model generation reference

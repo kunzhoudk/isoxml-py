@@ -1,17 +1,38 @@
-"""Input loading and value-unit helpers for shapefile conversion."""
+"""Input loading and value-unit helpers for vector-to-taskdata conversion."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import geopandas as gpd
 from isoxml.models.ddi import DDEntity
 
 if TYPE_CHECKING:
-    import geopandas as gpd
+    import geopandas as _gpd
 
 
 def trim(text: str, max_len: int) -> str:
     return text[:max_len]
+
+
+def load_vector_gdf(
+    source_path: Path,
+    *,
+    input_crs: str | None = None,
+    label: str = "Input",
+) -> "gpd.GeoDataFrame":
+    """Load a vector file supported by GeoPandas and ensure a CRS is present."""
+    if not source_path.exists():
+        raise FileNotFoundError(f"{label} file not found: {source_path}")
+
+    gdf = gpd.read_file(source_path)
+    if gdf.crs is None:
+        if input_crs:
+            gdf = gdf.set_crs(input_crs)
+        else:
+            raise ValueError(f"{label} file has no CRS. Provide input_crs.")
+    return gdf
 
 
 def unit_factor_to_ddi(input_unit: str, ddi: DDEntity) -> float:
@@ -40,9 +61,9 @@ def normalize_unit_text(raw: str | None) -> str | None:
 
 
 def detect_unit_from_gdf(
-    gdf: "gpd.GeoDataFrame", value_field: str
+    gdf: "_gpd.GeoDataFrame", value_field: str
 ) -> tuple[str | None, str | None]:
-    """Scan shapefile columns for a recognisable unit annotation."""
+    """Scan vector-file columns for a recognisable unit annotation."""
     candidates: list[str] = []
     paired = f"{value_field}_unit"
     if paired in gdf.columns:
@@ -74,11 +95,11 @@ def detect_unit_from_gdf(
 
 
 def resolve_value_unit(
-    gdf: "gpd.GeoDataFrame", requested: str, value_field: str
+    gdf: "_gpd.GeoDataFrame", requested: str, value_field: str
 ) -> tuple[str, str]:
     if requested != "auto":
         return requested, "cli"
     detected, col = detect_unit_from_gdf(gdf, value_field)
     if detected is not None:
-        return detected, f"shp:{col}"
+        return detected, f"vector:{col}"
     return "ddi", "default"

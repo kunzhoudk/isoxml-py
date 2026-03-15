@@ -7,7 +7,7 @@ import shapely as shp
 import isoxml.models.base.v3 as iso3
 from isoxml.grid.codec import decode
 from isoxml.geometry.shapely import ShapelyConverterV3
-from isoxml.pipeline.shp_to_taskdata import ShpToTaskDataOptions, convert
+from isoxml.pipeline.vector_to_taskdata import VectorToTaskDataOptions, convert
 
 gpd = pytest.importorskip("geopandas")
 
@@ -15,17 +15,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _options(
-        shp_path: Path,
-        boundary_shp: Path,
+        source_path: Path,
+        boundary_path: Path,
         *,
         boundary_mask: str = "touch",
         grid_extent: str = "boundary",
         grid_type: str = "1",
         value_unit: str = "kg/ha",
         cell_size_m: float = 3.0,
-) -> ShpToTaskDataOptions:
-    return ShpToTaskDataOptions(
-        shp_path=shp_path,
+) -> VectorToTaskDataOptions:
+    return VectorToTaskDataOptions(
+        source_path=source_path,
         value_field="rate",
         ddi=6,
         value_unit=value_unit,
@@ -36,7 +36,7 @@ def _options(
         grid_extent=grid_extent,
         input_crs=None,
         partfield_name=None,
-        boundary_shp=boundary_shp,
+        boundary_path=boundary_path,
         software_manufacturer="isoxml-py",
         software_version="0.1.0",
     )
@@ -118,17 +118,17 @@ def test_grid_extent_boundary__grid_bbox_matches_boundary_bbox():
 
 
 def test_auto_and_explicit_units__expected_scaling():
-    shp_path = REPO_ROOT / "examples/input/small/shp/Rx.shp"
+    source_path = REPO_ROOT / "examples/input/small/shp/Rx.shp"
     boundary_path = REPO_ROOT / "examples/input/small/boundary/Boundary.shp"
 
-    auto_result = convert(_options(shp_path, boundary_path, value_unit="auto", grid_type="1"))
+    auto_result = convert(_options(source_path, boundary_path, value_unit="auto", grid_type="1"))
     assert auto_result.effective_unit == "kg/ha"
-    assert auto_result.unit_source == "shp:unit"
+    assert auto_result.unit_source == "vector:unit"
     assert auto_result.task_data.tasks[0].grids[0].type == iso3.GridType.GridType1
     assert "GRD00000" in auto_result.refs
 
-    kg_result = convert(_options(shp_path, boundary_path, value_unit="kg/ha", grid_type="2"))
-    ddi_result = convert(_options(shp_path, boundary_path, value_unit="ddi", grid_type="2"))
+    kg_result = convert(_options(source_path, boundary_path, value_unit="kg/ha", grid_type="2"))
+    ddi_result = convert(_options(source_path, boundary_path, value_unit="ddi", grid_type="2"))
 
     kg_grid = kg_result.task_data.tasks[0].grids[0]
     ddi_grid = ddi_result.task_data.tasks[0].grids[0]
