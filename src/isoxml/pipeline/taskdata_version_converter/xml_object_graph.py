@@ -6,18 +6,15 @@ import dataclasses
 from enum import Enum
 from typing import Any
 
-import isoxml.models.base.v3 as iso3
-import isoxml.models.base.v4 as iso4
+from isoxml.models.base import get_version_module
 from isoxml.pipeline.taskdata_version_converter.field_mappings import get_field_mapping
 
 
 def resolve_target_module(target_xml_version: int | str):
-    version = str(target_xml_version)
-    if version == "3":
-        return iso3
-    if version == "4":
-        return iso4
-    raise ValueError(f"Unsupported target XML version: {target_xml_version!r}")
+    try:
+        return get_version_module(target_xml_version)
+    except ValueError as exc:
+        raise ValueError(f"Unsupported target XML version: {target_xml_version!r}") from exc
 
 
 def convert_tree(value: Any, target_iso) -> Any:

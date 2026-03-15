@@ -3,7 +3,6 @@
 import os.path
 import tempfile
 from pathlib import Path
-from types import ModuleType
 from typing import Literal
 from zipfile import ZipFile
 
@@ -13,6 +12,7 @@ from xsdata.formats.dataclass.parsers.config import ParserConfig
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.io.external import merge_ext_content
+from isoxml.models.version_registry import detect_from_xml
 
 _parser = XmlParser(ParserConfig(
     fail_on_unknown_properties=False,
@@ -46,14 +46,9 @@ def _resolve_taskdata_dir(task_data_path: Path) -> Path:
     )
 
 
-def _select_version_module(xml_content: str) -> ModuleType:
-    """Return the model module (v3 or v4) matching the XML VersionMajor attribute."""
-    head = xml_content[:1024]
-    if 'VersionMajor="4"' in head:
-        return iso4
-    if 'VersionMajor="3"' in head:
-        return iso3
-    raise ValueError("XML is neither ISOXML version 3 nor 4.")
+def _select_version_module(xml_content: str):
+    """Return the model module registered for the XML VersionMajor attribute."""
+    return detect_from_xml(xml_content[:1024])
 
 
 def read_from_path(

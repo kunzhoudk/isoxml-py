@@ -7,6 +7,7 @@ import pytest
 import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 from isoxml.io.reader import read_from_path, read_from_xml, read_from_zip
+from isoxml.models.version_registry import detect_from_xml, get
 from tests.resources.test_resources import TEST_RES_DIR
 
 
@@ -28,6 +29,16 @@ def test__read_from_xml__when_version_missing__expect_error():
     )
     with pytest.raises(ValueError):
         read_from_xml(xml)
+
+
+def test__version_registry__when_get_supported_version__expect_registered_module():
+    assert get("3") is iso3
+    assert get(4) is iso4
+
+
+def test__version_registry__when_detect_from_xml__expect_registered_module():
+    xml_head = '<ISO11783_TaskData VersionMajor="4" VersionMinor="3">'
+    assert detect_from_xml(xml_head) is iso4
 
 
 def test__read_from_path__when_xml_path__expect_parsed_v3():

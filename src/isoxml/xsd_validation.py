@@ -10,9 +10,9 @@ import isoxml.models.base.v3 as iso3
 import isoxml.models.base.v4 as iso4
 import xmlschema
 from isoxml.io.writer import to_xml
+from isoxml.models.base import get_version_module
 
 TaskData = iso3.Iso11783TaskData | iso4.Iso11783TaskData
-SUPPORTED_XML_VERSIONS: Final[frozenset[str]] = frozenset({"3", "4"})
 SCHEMA_PACKAGE: Final[str] = "isoxml.reference.xsd"
 
 __all__ = ["validate_xsd"]
@@ -49,8 +49,10 @@ def resolve_xml_version(
 def normalize_xml_version(xml_version: int | str) -> str:
     """Normalize and validate a supported XML major version."""
     version = str(xml_version)
-    if version not in SUPPORTED_XML_VERSIONS:
-        raise ValueError(f"Unsupported XML version for XSD validation: {xml_version!r}")
+    try:
+        get_version_module(version)
+    except ValueError as exc:
+        raise ValueError(f"Unsupported XML version for XSD validation: {xml_version!r}") from exc
     return version
 
 
